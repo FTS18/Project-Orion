@@ -1,0 +1,184 @@
+Understood — you want a **shorter, compressed, builder-safe SUPER PROMPT** that still includes **all functional requirements**, but fits within a smaller character limit so you can paste it into v0.dev / Bolt.new / Lovable / Windframe / Locofy / etc.
+
+Here is the **compressed but complete** version that preserves ALL requirements:
+
+---
+
+# ✅ **COMPACT SUPER PROMPT (WORKS IN SITE BUILDERS, INCLUDES EVERYTHING REQUIRED)**
+
+**Copy–paste directly — this version is optimized for token limits but keeps all rules intact.**
+
+---
+
+# **SUPER PROMPT (Compact Version)**
+
+Build a full **Dual-Mode Agentic AI Loan Assistant** web app using **Next.js 14 (App Router + RSC + Server Actions)**, **TailwindCSS 3.4+**, **ShadCN/UI**, **TypeScript (strict)**, **CSS variables (design tokens)**, **Dark/Light mode**, and a **FastAPI backend** using **Ollama only (LLaMA3 / Mistral / Phi-3)**.
+Use **SOLID principles**, Domain-Driven Design, modular architecture, clean separation of UI / domain / infrastructure / agents.
+
+The site must have **two modes**:
+
+---
+
+## **MODE A — Standard UI Mode (No AI)**
+
+Wizard flow for personal loan application:
+
+1. Personal details
+2. Loan details
+3. KYC
+4. Salary slip upload
+5. Eligibility result
+6. Sanction letter PDF download
+
+UI requirements:
+
+* ShadCN components
+* Buttons, steppers, forms
+* File upload
+* Token-based theming (no hardcoded CSS)
+* Responsive & animated
+
+---
+
+## **MODE B — Agentic AI Mode (Multi-Agent System)**
+
+A demo mode showing AI workflow:
+
+* Chat UI for **Master Agent**
+* Panels for **Sales**, **Verification**, **Underwriting**, **Sanction Letter Agent**
+* Logs console
+* Workflow graph
+* Auto-run + step-by-step
+* State viewer
+
+AI must run on **Ollama only**, using LangGraph/CrewAI patterns. Master Agent orchestrates Worker Agents.
+
+---
+
+# **BACKEND REQUIREMENTS (FastAPI)**
+
+Implement these exact REST endpoints:
+
+**POST /verify-kyc** → input `{customerId, name, phone, address}` → output `{status, mismatches[]}`
+**POST /extract-salary** → upload PDF/image → output `{grossIncome, netIncome, employer, parsed}`
+**POST /underwrite** → input `{customerId, loanRequest:{amount, tenure, rate}}` → output `{decision, reason, requiredAction}`
+**POST /generate-sanction-letter** → returns PDF URL
+**GET /crm/:customerId** → dummy KYC
+**GET /credit/:customerId** → `{score, preApprovedLimit}`
+**GET /offers** → mock Offer-Mart offers
+
+---
+
+# **AGENT RULES (must follow exactly)**
+
+### **Underwriting Agent**
+
+* If creditScore < 700 → REJECT
+* If loanAmount ≤ preApprovedLimit → APPROVE
+* If loanAmount ≤ 2× preApprovedLimit → request salary slip →
+
+  * Extract salary
+  * Compute EMI
+  * EMI ≤ 50% of net salary → APPROVE
+  * Else → REJECT
+* If loanAmount > 2× limit → REJECT
+
+### **Verification Agent**
+
+* Phone + name must match CRM
+* Address must match pincode/city
+* Else return PENDING
+
+### **Sales Agent**
+
+* Collect amount, tenure, purpose
+* Suggest offer from Offer-Mart
+* Return structured JSON loan request
+
+### **Sanction Letter Agent**
+
+* Only runs after approval
+* Creates PDF with customer info + loan terms + sanction ID
+
+Ollama prompts must be included in code (no GPT allowed).
+
+---
+
+# **DATA REQUIREMENTS (must include)**
+
+Create `data/customers.csv` + `data/customers.json` with **10 synthetic customers**, each containing:
+
+`customerId, name, age, city, phone, email, existingLoan, existingLoanAmount, creditScore, preApprovedLimit, employmentType, monthlyNetSalary`
+
+Also include:
+
+* Offer-Mart mock API
+* CRM mock API
+* Credit Bureau mock API
+* Sample salary slip PDFs
+
+---
+
+# **DELIVERABLES THE GENERATOR MUST OUTPUT**
+
+1. Full folder tree
+2. All source code (Next.js + FastAPI)
+3. Config files (next.config.js, tailwind.config.js, tsconfig.json, requirements.txt)
+4. Design tokens + CSS variables + theme system
+5. Two modes: `/apply` + `/agentic`
+6. Agents + orchestrator code
+7. mock APIs + synthetic data
+8. PDF generator template
+9. README with setup (Ollama install, backend run, frontend run)
+10. Demo script (4-min)
+11. Architecture diagram (ASCII)
+12. Unit test stubs for underwriting + verification
+
+---
+
+# **EVALUATION CRITERIA (include in docs)**
+
+* **Technical Design (40%)** — Multi-agent orchestration, SOLID structure
+* **Realism of Data/Workflow (25%)** — Good synthetic data, realistic APIs
+* **Conversation Flow (25%)** — Natural, persuasive, nonlinear
+* **Demo Quality (10%)** — Clear 3–4 min walkthrough
+
+---
+
+# **SUBMISSION FORMAT**
+
+Provide a ZIP or repo with:
+
+* `/frontend`
+* `/backend`
+* `/data`
+* `/docs` (architecture.md, evaluation.md, tips.md, demo-script.md)
+* `/sanction-templates`
+* `/tests`
+* README.md
+  A 3–4 minute demo recording or script.
+
+---
+
+# **TIPS (include in docs/tips.md)**
+
+* Make Master Agent conversational + persuasive
+* Show agent orchestration clearly
+* Demo edge cases (rejection, salary slip needed)
+* Use design tokens to theme quickly
+* Keep mock data realistic
+
+---
+
+# **End of Compact Super Prompt**
+
+---
+
+If you want, I can also generate:
+
+* A **super-compressed version** under 2,000 characters
+* A **minimal builder prompt** for strict token limits
+* A **JSON-encoded version** for models that require escape formatting
+* A **one-page submission-ready version** for judges
+
+Tell me what format you want.
