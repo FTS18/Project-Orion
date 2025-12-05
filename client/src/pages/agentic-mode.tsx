@@ -344,44 +344,88 @@ export default function AgenticModePage() {
   ]);
 
   const handleSendMessage = useCallback(async (content: string) => {
-    addMessage("master", "user", content);
-    
+    if (!currentCustomer && !content.match(/CUST\d{3}/i)) {
+      addMessage("master", "agent", "Please provide your Customer ID (e.g., CUST001) to begin.");
+      return;
+    }
+
+    // Extract customer ID if provided
     const customerIdMatch = content.match(/CUST\d{3}/i);
-    
-    if (customerIdMatch) {
-      const customerId = customerIdMatch[0].toUpperCase();
-      
-      if (workflowMode === "auto") {
-        await runFullWorkflow(customerId);
-      } else {
-        const customer = await processCustomerLookup(customerId);
+    const customerId = customerIdMatch ? customerIdMatch[0].toUpperCase() : currentCustomer?.customerId;
+
+    if (!customerId) {
+      addMessage("master", "agent", "Please provide a valid Customer ID (e.g., CUST001).");
+      return;
+    }
+
+    // Add user message
+    addMessage("master", "user", content);
+    setIsProcessing(true);
+    updateAgentStatus("master", { status: "active", lastAction: "Processing request" });
+
+    try {
+      // Call backend API
+      const response = await fetch("http://127.0.0.1:8000/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          message: content,
+        }),
+      });
+
+      if (!response.ok) throw new Error("API request failed");
+
+      const data = await response.json();
+
+      // Add agent response
+      addMessage("master", "agent", data.message);
+
+      // Update agent states
+      if (data.agentStates) {
+        data.agentStates.forEach((state: any) => {
+          updateAgentStatus(state.agentType, {
+            status: state.status,
+            lastAction: state.lastAction,
+            progress: state.progress,
+          });
+        });
+      }
+
+      // Add workflow logs
+      if (data.workflowLogs) {
+        data.workflowLogs.forEach((log: any) => {
+          addLog(log.agentType, log.action, log.details, log.level);
+        });
+      }
+
+      // Set customer if found
+      if (!currentCustomer && customers) {
+        const customer = customers.find(c => c.customerId === customerId);
         if (customer) {
-          addMessage("master", "agent", "Customer found! In step mode, click 'Next Step' to proceed through each agent phase.");
+          setCurrentCustomer(customer);
         }
       }
-    } else if (content.toLowerCase().includes("list") || content.toLowerCase().includes("customers")) {
-      const customerList = customers?.slice(0, 5).map(c => `• ${c.customerId}: ${c.name} (${c.city})`).join("\n");
-      addMessage("master", "agent", `Here are some available customers:\n\n${customerList}\n\nPlease provide a Customer ID to proceed.`);
-    } else if (content.toLowerCase().includes("sanction") || content.toLowerCase().includes("letter") || content.toLowerCase().includes("download")) {
-      if (sanctionLetter) {
-        setShowSanctionModal(true);
-        addMessage("master", "agent", "Opening your sanction letter...");
-      } else {
-        addMessage("master", "agent", "No sanction letter is available yet. Please complete the loan application process first.");
-      }
-    } else if (content.toLowerCase().includes("reset") || content.toLowerCase().includes("start over")) {
-      handleReset();
-      addMessage("master", "agent", "Workflow has been reset. Please provide a Customer ID to start a new application.");
-    } else {
-      addMessage("master", "agent", "I understand you're interested in a loan. To help you better, please provide your Customer ID (e.g., CUST001) so I can access your profile and available offers.");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      addMessage("master", "agent", "Sorry, I encountered an error processing your request. Please try again.");
+      addLog("master", "Error", errorMessage, "error");
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+      updateAgentStatus("master", { status: "completed" });
     }
   }, [
     addMessage,
-    workflowMode,
-    runFullWorkflow,
-    processCustomerLookup,
+    addLog,
+    updateAgentStatus,
+    currentCustomer,
     customers,
-    sanctionLetter,
   ]);
 
   const handleReset = useCallback(() => {
@@ -487,14 +531,14 @@ export default function AgenticModePage() {
 
         <div className="flex-1 overflow-hidden">
           <div className="h-full grid lg:grid-cols-5 gap-0">
-            <div className="lg:col-span-3 h-full border-r flex flex-col">
+            <div className="lg:col-span-3 h-full border-r flex flex-col min-h-0">
               <ChatInterface
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isLoading={isProcessing}
                 disabled={isProcessing && workflowMode === "auto"}
                 placeholder={isProcessing ? "Processing..." : "Type your message or Customer ID..."}
-                className="flex-1 border-0 rounded-none"
+                className="flex-1 border-0 rounded-none min-h-0"
               />
             </div>
 

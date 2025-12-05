@@ -30,9 +30,12 @@ export function ChatInterface({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    // Scroll to bottom when messages change
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, 0);
   }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,51 +47,49 @@ export function ChatInterface({
   };
 
   return (
-    <Card className={cn("flex flex-col h-full", className)}>
-      <ScrollArea 
-        className="flex-1 p-4" 
+    <Card className={cn("flex flex-col h-full w-full min-h-0", className)}>
+      <div 
         ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 min-h-0"
         role="log"
         aria-label="Chat messages"
         aria-live="polite"
       >
-        <div className="space-y-4">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Bot className="h-8 w-8 text-primary" aria-hidden="true" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Welcome to Loan Assistant</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                I'm your AI-powered loan assistant. I'll help you through the loan application process. 
-                Let's start by getting some basic information about your loan requirements.
-              </p>
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Bot className="h-8 w-8 text-primary" aria-hidden="true" />
             </div>
-          )}
+            <h3 className="text-lg font-semibold mb-2">Welcome to Loan Assistant</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              I'm your AI-powered loan assistant. I'll help you through the loan application process. 
+              Let's start by getting some basic information about your loan requirements.
+            </p>
+          </div>
+        )}
 
-          {messages.map((message, index) => (
-            <ChatMessage 
-              key={message.id} 
-              message={message} 
-              isLast={index === messages.length - 1}
-            />
-          ))}
+        {messages.map((message, index) => (
+          <ChatMessage 
+            key={message.id} 
+            message={message} 
+            isLast={index === messages.length - 1}
+          />
+        ))}
 
-          {isLoading && (
-            <div className="flex items-start gap-3 animate-fade-in">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  <Bot className="h-4 w-4" aria-hidden="true" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-tl-sm bg-muted max-w-md">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
-              </div>
+        {isLoading && (
+          <div className="flex items-start gap-3 animate-fade-in">
+            <Avatar className="h-8 w-8 flex-shrink-0">
+              <AvatarFallback className="bg-primary/10 text-primary">
+                <Bot className="h-4 w-4" aria-hidden="true" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-tl-sm bg-muted max-w-md">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+              <span className="text-sm text-muted-foreground">Thinking...</span>
             </div>
-          )}
-        </div>
-      </ScrollArea>
+          </div>
+        )}
+      </div>
 
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">

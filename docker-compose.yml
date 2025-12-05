@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Express Frontend + API Proxy
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - backend
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # FastAPI Backend
+  backend:
+    image: python:3.11-slim
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - .:/app
+    command: >
+      bash -c "
+        pip install -q -r backend/requirements.txt &&
+        uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+      "
+    depends_on:
+      - ollama
+
+  # Ollama LLM Server
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ollama-data:
+
+networks:
+  default:
+    name: project-orion-network

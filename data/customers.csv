@@ -1,0 +1,11 @@
+customerId,name,age,city,phone,email,existingLoan,existingLoanAmount,creditScore,preApprovedLimit,employmentType,monthlyNetSalary
+CUST001,Anita Verma,29,Delhi,+91-9810000001,anita.verma@example.com,no,0,720,150000,Salaried,65000
+CUST002,Rahul Mehra,35,Mumbai,+91-9810000002,rahul.mehra@example.com,yes,250000,680,100000,Salaried,85000
+CUST003,Sneha Kapoor,42,Bengaluru,+91-9810000003,sneha.kapoor@example.com,no,0,790,200000,Self-Employed,120000
+CUST004,Prakash Singh,31,Chandigarh,+91-9810000004,prakash.singh@example.com,no,0,695,90000,Salaried,40000
+CUST005,Meera Nair,27,Hyderabad,+91-9810000005,meera.nair@example.com,yes,120000,710,110000,Salaried,50000
+CUST006,Aditya Rao,38,Pune,+91-9810000006,aditya.rao@example.com,no,0,650,80000,Self-Employed,95000
+CUST007,Sunita Ghosh,45,Kolkata,+91-9810000007,sunita.ghosh@example.com,yes,500000,730,250000,Salaried,180000
+CUST008,Dev Patel,30,Ahmedabad,+91-9810000008,dev.patel@example.com,no,0,770,160000,Salaried,70000
+CUST009,Ritika Sharma,33,Jaipur,+91-9810000009,ritika.sharma@example.com,no,0,640,60000,Self-Employed,55000
+CUST010,Karan Verma,28,Noida,+91-9810000010,karan.verma@example.com,no,0,705,95000,Salaried,48000

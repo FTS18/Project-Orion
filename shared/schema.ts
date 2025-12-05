@@ -239,3 +239,23 @@ export const insertUserSchema = z.object({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = InsertUser & { id: string };
+
+// Chat Types for Agentic AI Mode
+export const chatRequestSchema = z.object({
+  customerId: z.string(),
+  message: z.string(),
+});
+
+export type ChatRequest = z.infer<typeof chatRequestSchema>;
+
+export const chatResponseSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  message: z.string(),
+  agentType: agentTypeSchema,
+  timestamp: z.string(),
+  agentStates: z.array(agentStateSchema).optional(),
+  workflowLogs: z.array(workflowLogEntrySchema).optional(),
+});
+
+export type ChatResponse = z.infer<typeof chatResponseSchema>;
