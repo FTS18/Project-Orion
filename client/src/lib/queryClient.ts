@@ -8,7 +8,10 @@ function getApiBaseUrl(): string {
   }
 
   // For development/local
-  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname === "localhost"
+  ) {
     return "http://localhost:5000";
   }
 
@@ -29,10 +32,10 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  data?: unknown | undefined
 ): Promise<Response> {
   const fullUrl = USE_MOCK_DATA ? url : `${API_BASE_URL}${url}`;
-  
+
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},

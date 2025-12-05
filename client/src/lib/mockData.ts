@@ -94,7 +94,10 @@ export const mockApiResponses: Record<string, any> = {
 };
 
 // Mock fetch handler
-export async function mockFetch(url: string, options?: RequestInit): Promise<Response> {
+export async function mockFetch(
+  url: string,
+  options?: RequestInit
+): Promise<Response> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -125,15 +128,18 @@ export async function mockFetch(url: string, options?: RequestInit): Promise<Res
 export function setupMockFetch(): void {
   if (USE_MOCK_DATA && typeof window !== "undefined") {
     const originalFetch = window.fetch;
-    
-    window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+
+    window.fetch = (
+      input: RequestInfo | URL,
+      init?: RequestInit
+    ): Promise<Response> => {
       const url = typeof input === "string" ? input : input.toString();
-      
+
       // Use mock fetch for API calls
       if (url.includes("/api/")) {
         return mockFetch(url, init);
       }
-      
+
       // Use original fetch for everything else
       return originalFetch(input, init);
     };
