@@ -3,7 +3,9 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { SimpleWorkflowGraph } from "@/components/workflow-graph";
+import { USE_MOCK_DATA } from "@/lib/queryClient";
 import { 
   ArrowRight, 
   Bot, 
@@ -14,7 +16,8 @@ import {
   Calculator,
   CheckCircle2,
   Clock,
-  Lock
+  Lock,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +75,18 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-16">
+      {USE_MOCK_DATA && (
+        <div className="fixed top-16 left-0 right-0 bg-amber-500/10 border-b border-amber-500/20 z-40">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 flex-shrink-0" aria-hidden="true" />
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              <strong>Demo Mode:</strong> Using sample data. Connect backend for full functionality.
+            </p>
+          </div>
+        </div>
+      )}
+      
+      <main className={cn("pt-16", USE_MOCK_DATA && "pt-28")}>
         <section 
           className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden"
           aria-labelledby="hero-heading"
@@ -325,12 +339,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t py-8">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 text-center text-sm text-muted-foreground">
-          <p>Agentic AI Loan Assistant - Dual Mode Application</p>
-          <p className="mt-1">Built with AI-powered multi-agent orchestration</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

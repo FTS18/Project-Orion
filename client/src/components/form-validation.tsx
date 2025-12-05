@@ -96,8 +96,8 @@ export const FormField = ({
 
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-sm font-medium text-foreground mb-2">
+        {label} {required && <span className="text-destructive">*</span>}
       </label>
       <input
         type={type}
@@ -108,12 +108,12 @@ export const FormField = ({
         placeholder={placeholder}
         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
           hasError
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300 focus:ring-blue-500'
+            ? 'border-destructive focus:ring-destructive'
+            : 'border-input focus:ring-primary'
         }`}
       />
       {hasError && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+        <p className="mt-1 text-sm text-destructive">{error}</p>
       )}
     </div>
   );

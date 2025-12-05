@@ -139,7 +139,7 @@ export const ABTestingDashboard: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded">
           {error}
         </div>
       )}
@@ -157,7 +157,7 @@ export const ABTestingDashboard: React.FC = () => {
       {/* Tests List */}
       <div className="space-y-4">
         {tests.length === 0 ? (
-          <Card className="p-8 text-center text-gray-500">
+          <Card className="p-8 text-center text-muted-foreground">
             No tests yet. Create one to get started!
           </Card>
         ) : (
@@ -196,15 +196,15 @@ const TestCard: React.FC<TestCardProps> = ({
   onExport,
 }) => {
   const statusColors = {
-    running: 'bg-green-100 text-green-800',
-    completed: 'bg-blue-100 text-blue-800',
-    paused: 'bg-yellow-100 text-yellow-800',
+    running: 'bg-green-500/20 text-green-700 dark:text-green-400',
+    completed: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
+    paused: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
   };
 
   return (
     <Card
       className={`p-6 cursor-pointer transition ${
-        isSelected ? 'border-2 border-blue-500 bg-blue-50' : 'hover:shadow-lg'
+        isSelected ? 'border-2 border-primary bg-secondary/50' : 'hover:shadow-lg'
       }`}
       onClick={onSelect}
     >
@@ -220,17 +220,17 @@ const TestCard: React.FC<TestCardProps> = ({
               {test.status.toUpperCase()}
             </span>
           </div>
-          <p className="text-gray-600 mb-2">{test.name}</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-muted-foreground mb-2">{test.name}</p>
+          <p className="text-sm text-muted-foreground">
             Created: {new Date(test.created_at).toLocaleDateString()}
           </p>
         </div>
 
         {test.winner && (
-          <div className="text-right bg-green-50 p-3 rounded">
-            <div className="text-sm text-gray-600">Winner</div>
-            <div className="font-bold text-green-700">{test.winner}</div>
-            <div className="text-xs text-gray-600">
+          <div className="text-right bg-primary/10 p-3 rounded border border-primary/20">
+            <div className="text-sm text-muted-foreground">Winner</div>
+            <div className="font-bold text-primary">{test.winner}</div>
+            <div className="text-xs text-muted-foreground">
               {test.winner_conversion?.toFixed(1)}% conversion
             </div>
           </div>
@@ -240,12 +240,12 @@ const TestCard: React.FC<TestCardProps> = ({
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         {test.variants.map((variant) => (
-          <div key={variant.name} className="bg-gray-50 p-3 rounded">
-            <div className="text-xs text-gray-600 font-semibold">{variant.name}</div>
-            <div className="text-lg font-bold text-blue-600">
+          <div key={variant.name} className="bg-secondary/50 p-3 rounded border">
+            <div className="text-xs text-muted-foreground font-semibold">{variant.name}</div>
+            <div className="text-lg font-bold text-primary">
               {variant.conversion_rate.toFixed(1)}%
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               {variant.approvals}/{variant.total_requests} approved
             </div>
           </div>
@@ -348,19 +348,19 @@ const TestDetailedView: React.FC<TestDetailedViewProps> = ({ test }) => {
                 <div className="font-semibold mb-2">{v.name}</div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-gray-600">Total Requests:</span>
+                    <span className="text-muted-foreground">Total Requests:</span>
                     <div className="font-semibold">{v.total_requests}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Avg Response Time:</span>
+                    <span className="text-muted-foreground">Avg Response Time:</span>
                     <div className="font-semibold">{v.avg_response_time.toFixed(2)}s</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Satisfaction Score:</span>
+                    <span className="text-muted-foreground">Satisfaction Score:</span>
                     <div className="font-semibold">{v.avg_satisfaction_score.toFixed(2)}/5</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Approval Rate:</span>
+                    <span className="text-muted-foreground">Approval Rate:</span>
                     <div className="font-semibold">{(v.conversion_rate * 100).toFixed(1)}%</div>
                   </div>
                 </div>
@@ -412,7 +412,7 @@ const NewTestForm: React.FC<NewTestFormProps> = ({ onCreate, onCancel }) => {
   };
 
   return (
-    <Card className="p-6 bg-blue-50">
+    <Card className="p-6 bg-secondary/30">
       <h3 className="text-lg font-bold mb-4">Create New Test</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">

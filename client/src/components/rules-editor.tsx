@@ -151,7 +151,7 @@ export const RulesEditor: React.FC<RuleEditorProps> = ({ onClose }) => {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded">
           {error}
         </div>
       )}
@@ -189,8 +189,8 @@ export const RulesEditor: React.FC<RuleEditorProps> = ({ onClose }) => {
                     <h3 className={`font-semibold ${!rule.enabled ? 'opacity-50' : ''}`}>
                       {rule.name}
                     </h3>
-                    <p className="text-sm text-gray-600">{rule.description}</p>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground">{rule.description}</p>
+                    <div className="text-xs text-muted-foreground mt-1">
                       Type: {rule.rule_type} | Operator: {rule.operator} | Threshold:{' '}
                       {rule.threshold} | Action: {rule.action} | Priority: {rule.priority}
                     </div>
@@ -274,7 +274,7 @@ const RuleForm: React.FC<RuleFormProps> = ({
   };
 
   return (
-    <Card className="p-6 bg-blue-50">
+    <Card className="p-6 bg-secondary/30">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>

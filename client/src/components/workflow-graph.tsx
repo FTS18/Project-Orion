@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { AgentType, AgentStatus } from "@shared/schema";
 import { Users, Shield, Calculator, FileText, Brain } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface WorkflowNode {
   id: AgentType;
@@ -121,13 +122,28 @@ export function WorkflowGraph({ nodes, activeAgent, className }: WorkflowGraphPr
 }
 
 export function SimpleWorkflowGraph({ className }: { className?: string }) {
+  const [activeAgent, setActiveAgent] = useState<AgentType>("master");
+  const agentSequence: AgentType[] = ["master", "sales", "verification", "underwriting", "sanction"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveAgent((prev) => {
+        const currentIndex = agentSequence.indexOf(prev);
+        const nextIndex = (currentIndex + 1) % agentSequence.length;
+        return agentSequence[nextIndex];
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const defaultNodes: WorkflowNode[] = [
-    { id: "master", label: "Master Agent", icon: agentIcons.master, status: "idle" },
-    { id: "sales", label: "Sales Agent", icon: agentIcons.sales, status: "idle" },
-    { id: "verification", label: "Verification", icon: agentIcons.verification, status: "idle" },
-    { id: "underwriting", label: "Underwriting", icon: agentIcons.underwriting, status: "idle" },
-    { id: "sanction", label: "Sanction Letter", icon: agentIcons.sanction, status: "idle" },
+    { id: "master", label: "Master Agent", icon: agentIcons.master, status: activeAgent === "master" ? "active" : "idle" },
+    { id: "sales", label: "Sales Agent", icon: agentIcons.sales, status: activeAgent === "sales" ? "active" : "idle" },
+    { id: "verification", label: "Verification", icon: agentIcons.verification, status: activeAgent === "verification" ? "active" : "idle" },
+    { id: "underwriting", label: "Underwriting", icon: agentIcons.underwriting, status: activeAgent === "underwriting" ? "active" : "idle" },
+    { id: "sanction", label: "Sanction Letter", icon: agentIcons.sanction, status: activeAgent === "sanction" ? "active" : "idle" },
   ];
 
-  return <WorkflowGraph nodes={defaultNodes} activeAgent={null} className={className} />;
+  return <WorkflowGraph nodes={defaultNodes} activeAgent={activeAgent} className={className} />;
 }

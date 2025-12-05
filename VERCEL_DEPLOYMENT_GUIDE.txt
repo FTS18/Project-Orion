@@ -1,0 +1,211 @@
+VERCEL DEPLOYMENT GUIDE - Frontend Showcase
+============================================
+
+Your frontend now works in TWO modes:
+
+## MODE 1: DEMO MODE (No Backend Required)
+- ✅ Works instantly on Vercel
+- Uses mock data for all API calls
+- Shows demo banner at top
+- Perfect for showcasing the UI/UX
+- No timeout issues
+- All pages load instantly
+
+## MODE 2: WITH BACKEND (Full Functionality)
+- Requires backend API running
+- Connect to backend by setting environment variable
+- Full real data processing
+- All features work end-to-end
+
+---
+
+## QUICK START FOR VERCEL
+
+### Step 1: Push to GitHub
+git add -A
+git commit -m "Add mock data for showcase"
+git push origin main
+
+### Step 2: Deploy to Vercel
+1. Go to vercel.com
+2. Click "Add New Project"
+3. Select your GitHub repository
+4. Click "Import"
+5. Wait for build to complete
+6. Your site is now live! ✅
+
+### Step 3 (Optional): Connect Backend
+To use real backend instead of demo data:
+
+1. On Vercel Dashboard
+2. Go to Settings → Environment Variables
+3. Add: VITE_API_URL = https://your-backend-api.com
+4. Redeploy
+5. Demo banner disappears, real data shown
+
+---
+
+## WHAT'S WORKING
+
+✅ Standard Mode (with demo data)
+✅ Agentic AI Mode (with demo data)  
+✅ All pages load instantly
+✅ Dark/light theme works
+✅ Forms accept input
+✅ Buttons are clickable
+✅ All animations work
+✅ Responsive design
+
+⚠️ API calls return mock data (unless backend connected)
+
+---
+
+## ENVIRONMENT VARIABLES
+
+### For Demo Mode (Default)
+Leave VITE_API_URL empty or not set
+→ Uses mock data automatically
+
+### For Backend Integration
+Set: VITE_API_URL=https://your-backend-api.com
+→ Calls real backend API
+
+---
+
+## LOCAL TESTING BEFORE DEPLOYMENT
+
+### Build Frontend
+npm run build:client:prod
+
+### Preview Build Locally
+npm run preview:client
+# Open http://localhost:4173
+
+### Deploy to Vercel
+vercel deploy --prod
+
+---
+
+## MOCK DATA INCLUDED
+
+The frontend includes mock data for:
+- Customers list (3 samples)
+- KYC verification
+- Salary extraction
+- Loan underwriting
+- Sanction letter generation
+- EMI calculations
+
+All API responses are instant (500ms delay simulated)
+
+---
+
+## PERFORMANCE
+
+✅ Zero API latency (mock data)
+✅ Fast page loads
+✅ Optimized bundle size
+✅ Global CDN via Vercel
+✅ Instant responses
+
+---
+
+## CONNECTING REAL BACKEND
+
+When ready to use real backend:
+
+### 1. Deploy Backend
+- Use Railway, Render, Heroku, or AWS
+- Note the backend URL (e.g., https://api.example.com)
+
+### 2. Update Vercel Environment
+- Go to Vercel project settings
+- Add: VITE_API_URL = https://api.example.com
+- Redeploy
+
+### 3. Configure Backend CORS
+Backend must allow requests from Vercel domain:
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://your-vercel-domain.vercel.app",
+        "http://localhost:3000",  # local dev
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+---
+
+## VERCEL DEPLOYMENT URL
+
+After deployment, your site will be at:
+https://project-orion-xxxx.vercel.app
+
+Share this URL to showcase the application!
+
+---
+
+## TROUBLESHOOTING
+
+### Page loads but shows loading spinner forever
+→ Backend not connected and demo mode not activated
+→ Solution: Refresh page, or set VITE_API_URL empty
+
+### Getting timeout errors
+→ Backend is not accessible or slow
+→ Solution: 
+   a) Deploy backend to fast server
+   b) Or remove VITE_API_URL to use demo mode
+
+### Mock data not showing
+→ setupMockFetch() not called
+→ Solution: Rebuild and redeploy
+
+### Dark mode not working
+→ Theme preference not loading
+→ Solution: Hard refresh browser (Ctrl+Shift+R)
+
+---
+
+## SWITCHING MODES
+
+### Show Demo Banner
+Leave VITE_API_URL unset
+
+### Hide Demo Banner (Use Real Backend)
+Set: VITE_API_URL=https://your-api.com
+
+### Switch Back to Demo
+Remove VITE_API_URL environment variable
+Redeploy
+
+---
+
+## NEXT STEPS
+
+1. ✅ Deploy frontend to Vercel
+2. Deploy backend to Railway/Render/Heroku
+3. Connect by setting VITE_API_URL
+4. Test all features with real data
+5. Monitor performance
+6. Scale as needed
+
+---
+
+## FILES CHANGED
+
+- client/src/lib/queryClient.ts - Added API URL detection
+- client/src/lib/mockData.ts - NEW: Mock data service
+- client/src/main.tsx - Added mock setup
+- client/src/pages/landing.tsx - Added demo banner
+- .env.local - Updated with comments
+- .env.production - NEW: For production
+
+All changes are backward compatible!

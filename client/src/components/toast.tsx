@@ -39,10 +39,10 @@ export const ToastContainer = ({ toasts, onRemove }: { toasts: Toast[]; onRemove
         <div
           key={toast.id}
           className={`px-4 py-3 rounded-lg shadow-lg text-white animate-slide-in flex items-center gap-2 ${
-            toast.type === 'success' ? 'bg-green-500' :
-            toast.type === 'error' ? 'bg-red-500' :
-            toast.type === 'warning' ? 'bg-yellow-500' :
-            'bg-blue-500'
+            toast.type === 'success' ? 'bg-green-600 dark:bg-green-700' :
+            toast.type === 'error' ? 'bg-red-600 dark:bg-red-700' :
+            toast.type === 'warning' ? 'bg-yellow-600 dark:bg-yellow-700' :
+            'bg-blue-600 dark:bg-blue-700'
           }`}
         >
           <span>

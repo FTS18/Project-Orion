@@ -144,12 +144,12 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   onClick={() => handleSelectCustomer(customer)}
                 >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{customer.name}</p>
-                      <p className="text-sm text-gray-600">
-                        ID: {customer.customerId} | Phone: {customer.phone}
-                      </p>
-                      <div className="flex gap-4 text-xs text-gray-500 mt-2">
+                  <div>
+                    <p className="font-semibold">{customer.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ID: {customer.customerId} | Phone: {customer.phone}
+                    </p>
+                    <div className="flex gap-4 text-xs text-muted-foreground mt-2">
                         <span>Salary: ₹{customer.monthlyNetSalary.toLocaleString('en-IN')}</span>
                         <span>Credit Score: {customer.creditScore}</span>
                         <span>Pre-approved: ₹{customer.preApprovedLimit.toLocaleString('en-IN')}</span>
@@ -159,7 +159,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                         selectedCustomer?.customerId === customer.customerId
                           ? 'border-primary bg-primary'
-                          : 'border-gray-300'
+                          : 'border-input'
                       }`}
                     >
                       {selectedCustomer?.customerId === customer.customerId && (
@@ -173,8 +173,8 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
           </div>
 
           {/* Custom Customer Entry */}
-          <Card className="p-6 bg-blue-50 border-2 border-dashed">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 border-2 border-dashed bg-muted/50">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
               <Plus className="w-5 h-5" />
               Or Enter Your Own Details
             </h3>
@@ -334,10 +334,10 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
         <TabsContent value="loan" className="space-y-4">
           {selectedCustomer && (
             <>
-              <Card className="p-4 bg-blue-50">
+              <Card className="p-4 bg-secondary/30">
                 <h3 className="font-semibold mb-2">Selected Customer</h3>
                 <p className="text-sm">{selectedCustomer.name} ({selectedCustomer.customerId})</p>
-                <p className="text-xs text-gray-600 mt-1">Email: {selectedCustomer.email}</p>
+                <p className="text-xs text-muted-foreground mt-1">Email: {selectedCustomer.email}</p>
               </Card>
 
               <Card className="p-6">
@@ -347,7 +347,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   <div>
                     <Label htmlFor="amount">
                       Loan Amount (₹) *
-                      <span className="text-xs text-gray-500 ml-2">
+                      <span className="text-xs text-muted-foreground ml-2">
                         (Max: ₹{selectedCustomer.preApprovedLimit.toLocaleString('en-IN')})
                       </span>
                     </Label>
@@ -371,7 +371,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   <div>
                     <Label htmlFor="tenure">
                       Tenure (Months) *
-                      <span className="text-xs text-gray-500 ml-2">(12 - 84 months)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(12 - 84 months)</span>
                     </Label>
                     <Input
                       id="tenure"
@@ -389,7 +389,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   <div>
                     <Label htmlFor="rate">
                       Interest Rate (%) *
-                      <span className="text-xs text-gray-500 ml-2">(Annual)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(Annual)</span>
                     </Label>
                     <Input
                       id="rate"
@@ -406,9 +406,9 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   </div>
 
                   {/* EMI Calculation Preview */}
-                  <Card className="p-4 bg-green-50 border-green-200">
-                    <p className="text-xs text-gray-600 mb-2">Monthly EMI Estimate</p>
-                    <p className="text-2xl font-bold text-green-700">
+                  <Card className="p-4 bg-secondary/30 border-primary/30">
+                    <p className="text-xs text-muted-foreground mb-2">Monthly EMI Estimate</p>
+                    <p className="text-2xl font-bold text-primary">
                       ₹
                       {calculateEMI(
                         loanDetails.loanAmount,
@@ -416,7 +416,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                         loanDetails.tenure
                       ).toLocaleString('en-IN')}
                     </p>
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       Total Amount: ₹
                       {(
                         calculateEMI(

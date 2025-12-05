@@ -349,22 +349,28 @@ export default function AgenticModePage() {
   ]);
 
   const handleSendMessage = useCallback(async (content: string) => {
-    if (!currentCustomer && !content.match(/CUST\d{3}/i)) {
+    // If custom data was entered, use it directly
+    if (customCustomerData) {
+      addMessage("master", "user", content);
+      // Custom data already set, proceed with chat
+    } else if (!currentCustomer && !content.match(/CUST\d{3}/i)) {
       addMessage("master", "agent", "Please provide your Customer ID (e.g., CUST001) to begin.");
       return;
     }
 
     // Extract customer ID if provided
     const customerIdMatch = content.match(/CUST\d{3}/i);
-    const customerId = customerIdMatch ? customerIdMatch[0].toUpperCase() : currentCustomer?.customerId;
+    const customerId = customerIdMatch ? customerIdMatch[0].toUpperCase() : (currentCustomer?.customerId || customCustomerData?.customerId);
 
     if (!customerId) {
-      addMessage("master", "agent", "Please provide a valid Customer ID (e.g., CUST001).");
+      addMessage("master", "agent", "Please provide a valid Customer ID (e.g., CUST001) or enter your details.");
       return;
     }
 
     // Add user message
-    addMessage("master", "user", content);
+    if (!customCustomerData) {
+      addMessage("master", "user", content);
+    }
     setIsProcessing(true);
     updateAgentStatus("master", { status: "active", lastAction: "Processing request" });
 

@@ -254,12 +254,14 @@ export default function StandardModePage() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return selectedCustomerId && loanAmount && parseInt(loanAmount) > 0 && loanPurpose;
+        return selectedCustomerId && loanAmount && parseInt(loanAmount) > 0 && (customCustomerData ? true : loanPurpose);
       case 2:
         return true;
       case 3:
         return kycResult?.status === "VERIFIED";
       case 4:
+        return true;
+      case 5:
         return true;
       default:
         return false;
@@ -300,7 +302,12 @@ export default function StandardModePage() {
               }}
               onClose={() => {
                 setShowDataEntry(false);
-                setCurrentStep(1);
+                // Skip Step 1 if custom data entered, go straight to Step 2 (Documents)
+                if (customCustomerData || customLoanData) {
+                  setCurrentStep(2);
+                } else {
+                  setCurrentStep(1);
+                }
               }}
             />
           </div>
