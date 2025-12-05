@@ -270,6 +270,83 @@ ollama pull mistral
 
 ---
 
+## 🚀 Free Deployment (100% Free Options)
+
+### Option 1: Backend on Render.com (Free)
+
+**Step 1: Create Render Account & Deploy**
+1. Go to https://render.com
+2. Sign up with GitHub
+3. Click "New +" → "Web Service"
+4. Select this GitHub repo
+5. Set:
+   - Name: `project-orion-backend`
+   - Environment: `Python 3.10`
+   - Build: `pip install -r backend/requirements.txt`
+   - Start: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend.app:app`
+6. Deploy (5-10 min)
+7. Get URL: `https://project-orion-backend.onrender.com`
+
+### Option 2: Frontend on Vercel (Free)
+
+**Step 1: Deploy to Vercel**
+1. Go to https://vercel.com
+2. Sign up with GitHub
+3. Click "Import Project" → Select repo
+4. Set Root Directory: `client`
+5. Set Environment:
+   ```
+   VITE_API_URL=https://project-orion-backend.onrender.com
+   ```
+6. Deploy
+7. Get URL: `https://project-orion.vercel.app`
+
+### Option 3: Ollama on Railway (Free $5 Credit/Month)
+
+**Step 1: Deploy Ollama**
+1. Go to https://railway.app
+2. Sign up with GitHub
+3. New Project → Deploy from Repo
+4. Select this GitHub repo
+5. Add environment vars:
+   ```
+   OLLAMA_MODEL=mistral
+   ```
+6. Deploy
+7. Get URL: `https://ollama-project-railway.app`
+
+---
+
+### Complete Free Deployment URLs
+
+```
+Backend:  https://project-orion-backend.onrender.com
+Frontend: https://project-orion.vercel.app
+Ollama:   https://ollama-project-railway.app
+```
+
+### Cost: $0-5/month (100% Free to Start)
+
+| Service | Free Limit | Cost |
+|---------|-----------|------|
+| Render Backend | Yes (sleeps after 15 min) | $0 |
+| Vercel Frontend | Yes | $0 |
+| Railway Ollama | $5 credit/month | $0 |
+| **Total** | **All Free!** | **$0** |
+
+---
+
+## 🔗 Free Deployment Checklist
+
+- [ ] Push code to GitHub (done ✅)
+- [ ] Deploy backend to Render
+- [ ] Deploy frontend to Vercel  
+- [ ] Deploy Ollama to Railway
+- [ ] Connect via environment variables
+- [ ] Test at `https://project-orion.vercel.app`
+
+---
+
 ## 📝 Development Commands
 
 ```bash

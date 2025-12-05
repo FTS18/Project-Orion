@@ -7,6 +7,7 @@ import { FileUpload } from "@/components/file-upload";
 import { CustomerDataCard, LoanRequestCard, UnderwritingResultCard } from "@/components/data-card";
 import { StatusBadge } from "@/components/status-badge";
 import { SanctionLetterModal } from "@/components/sanction-letter-modal";
+import { CustomDataEntry, type CustomerData, type LoanDetails } from "@/components/custom-data-entry";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,10 @@ const LOAN_PURPOSES = [
 export default function StandardModePage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  const [showDataEntry, setShowDataEntry] = useState(true);
+  const [customCustomerData, setCustomCustomerData] = useState<CustomerData | null>(null);
+  const [customLoanData, setCustomLoanData] = useState<LoanDetails | null>(null);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
@@ -268,6 +273,41 @@ export default function StandardModePage() {
     purpose: loanPurpose,
     rate: offers?.[0]?.interestRate,
   } : null;
+
+  // Show data entry modal if no custom data selected yet
+  if (showDataEntry) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header mode="standard" onModeChange={(mode) => navigate(`/${mode}`)} showModeToggle />
+        <main className="pt-16 min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl">
+            <div className="mb-8 text-center">
+              <h1 className="text-4xl font-bold mb-2">Loan Application - Standard Mode</h1>
+              <p className="text-muted-foreground text-lg">
+                Step 0: Provide your details to get started
+              </p>
+            </div>
+            <CustomDataEntry
+              onCustomerSelected={(data) => {
+                setCustomCustomerData(data);
+                setSelectedCustomerId(data.customerId);
+                setLoanAmount(data.preApprovedLimit.toString());
+              }}
+              onLoanDetailsEntered={(data) => {
+                setCustomLoanData(data);
+                setLoanAmount(data.loanAmount.toString());
+                setLoanTenure(data.tenure.toString());
+              }}
+              onClose={() => {
+                setShowDataEntry(false);
+                setCurrentStep(1);
+              }}
+            />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

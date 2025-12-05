@@ -7,6 +7,7 @@ import { AgentPanelGrid } from "@/components/agent-panel";
 import { WorkflowGraph } from "@/components/workflow-graph";
 import { InlineLogViewer } from "@/components/log-drawer";
 import { SanctionLetterModal } from "@/components/sanction-letter-modal";
+import { CustomDataEntry, type CustomerData, type LoanDetails } from "@/components/custom-data-entry";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,10 @@ const WELCOME_MESSAGE: AgentMessage = {
 export default function AgenticModePage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  const [showDataEntry, setShowDataEntry] = useState(true);
+  const [customCustomerData, setCustomCustomerData] = useState<CustomerData | null>(null);
+  const [customLoanData, setCustomLoanData] = useState<LoanDetails | null>(null);
   
   const [messages, setMessages] = useState<AgentMessage[]>([WELCOME_MESSAGE]);
   const [agents, setAgents] = useState<AgentStateData[]>(INITIAL_AGENTS);
@@ -450,6 +455,48 @@ export default function AgenticModePage() {
     icon: null,
     status: a.status,
   }));
+
+  // Show data entry modal if no custom data selected yet
+  if (showDataEntry) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header mode="agentic" onModeChange={(mode) => navigate(`/${mode}`)} showModeToggle />
+        <main className="pt-16 min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl">
+            <div className="mb-8 text-center">
+              <h1 className="text-4xl font-bold mb-2">Agentic AI Loan Assistant</h1>
+              <p className="text-muted-foreground text-lg">
+                Let's get your information first, then I'll help you through the entire loan process
+              </p>
+            </div>
+            <CustomDataEntry
+              onCustomerSelected={(data) => {
+                setCustomCustomerData(data);
+              }}
+              onLoanDetailsEntered={(data) => {
+                setCustomLoanData(data);
+              }}
+              onClose={() => {
+                setShowDataEntry(false);
+                // Update welcome message with custom data
+                if (customCustomerData && customLoanData) {
+                  const newWelcome: AgentMessage = {
+                    id: "welcome-updated",
+                    agentType: "master",
+                    role: "agent",
+                    content: `Great! I've got your details, ${customCustomerData.name}. Now let me coordinate with my team of specialized agents to process your loan application.\n\nLoan Amount: ₹${customLoanData.loanAmount.toLocaleString('en-IN')}\nTenure: ${customLoanData.tenure} months\nRate: ${customLoanData.rate}% p.a.\n\nLet me start by verifying your information with our sales team.`,
+                    timestamp: new Date().toISOString(),
+                  };
+                  setMessages([newWelcome]);
+                  addLog("master", "Application Initiated", `Customer: ${customCustomerData.name}, Loan: ₹${customLoanData.loanAmount}`, "success");
+                }
+              }}
+            />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

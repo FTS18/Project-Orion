@@ -45,8 +45,8 @@ export default function LandingPage() {
       id: "standard" as const,
       title: "Standard Mode",
       subtitle: "Traditional Wizard Flow",
-      description: "Step-by-step guided process with manual form filling, document upload, and clear progression through each stage.",
-      features: ["4-step wizard process", "Manual data entry", "Document upload", "Progress tracking"],
+      description: "Step-by-step guided process with manual form filling, document upload, and clear progression through each stage. Enter your own details or select from pre-approved customers.",
+      features: ["4-step wizard process", "Custom data entry", "Pre-approved customers", "Document upload", "Progress tracking"],
       icon: <FileText className="h-8 w-8" aria-hidden="true" />,
       cta: "Start Application"
     },
@@ -54,8 +54,8 @@ export default function LandingPage() {
       id: "agentic" as const,
       title: "Agentic AI Mode",
       subtitle: "Intelligent Conversation",
-      description: "Chat with our AI assistant that coordinates multiple specialized agents to handle your loan application seamlessly.",
-      features: ["Natural conversation", "Multi-agent system", "Real-time insights", "Automated processing"],
+      description: "Chat with our AI assistant that coordinates multiple specialized agents to handle your loan application seamlessly. Provide your details and let the agents take care of the rest.",
+      features: ["Natural conversation", "Custom data entry", "Multi-agent system", "Real-time insights", "Automated processing"],
       icon: <Bot className="h-8 w-8" aria-hidden="true" />,
       cta: "Chat with AI"
     }
@@ -262,8 +262,9 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-5 gap-8">
               {[
+                { step: 0, title: "Your Details", description: "Enter your information or select from pre-approved list", icon: <Users className="h-5 w-5" /> },
                 { step: 1, title: "Select Customer", description: "Choose from pre-approved customers or enter details", icon: <Users className="h-5 w-5" /> },
                 { step: 2, title: "Verification", description: "Automated KYC verification against CRM records", icon: <Shield className="h-5 w-5" /> },
                 { step: 3, title: "Underwriting", description: "AI-powered credit assessment and decision", icon: <Calculator className="h-5 w-5" /> },
