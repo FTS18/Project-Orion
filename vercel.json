@@ -1,7 +1,4 @@
 {
   "buildCommand": "npm run build:client:prod",
-  "outputDirectory": "dist/client",
-  "env": {
-    "VITE_API_URL": "@vite-api-url"
-  }
+  "outputDirectory": "dist/client"
 }
