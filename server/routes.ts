@@ -473,5 +473,202 @@ export async function registerRoutes(
     }
   });
 
+  /**
+   * Business Rules API
+   */
+  
+  // In-memory rules storage (in production, use database)
+  let businessRules: Array<{
+    name: string;
+    rule_type: string;
+    operator: string;
+    threshold: any;
+    action: string;
+    priority: number;
+    enabled: boolean;
+    description: string;
+  }> = [
+    {
+      name: "credit_score_minimum",
+      rule_type: "credit_score",
+      operator: "greater_than",
+      threshold: 700,
+      action: "reject",
+      priority: 1,
+      enabled: true,
+      description: "Reject applications with credit score below 700"
+    },
+    {
+      name: "max_loan_amount",
+      rule_type: "loan_amount",
+      operator: "less_than",
+      threshold: 5000000,
+      action: "approve",
+      priority: 2,
+      enabled: true,
+      description: "Maximum loan amount of 50 lakhs"
+    },
+    {
+      name: "dti_ratio_check",
+      rule_type: "dti_ratio",
+      operator: "less_than",
+      threshold: 0.5,
+      action: "approve",
+      priority: 3,
+      enabled: true,
+      description: "EMI should not exceed 50% of monthly income"
+    }
+  ];
+
+  /**
+   * GET /api/rules - Get all business rules
+   */
+  app.get("/api/rules", async (_req: Request, res: Response) => {
+    try {
+      res.json({ rules: businessRules });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch rules" });
+    }
+  });
+
+  /**
+   * POST /api/rules - Add a new business rule
+   */
+  app.post("/api/rules", async (req: Request, res: Response) => {
+    try {
+      const newRule = req.body;
+      businessRules.push(newRule);
+      res.json({ success: true, rule: newRule });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add rule" });
+    }
+  });
+
+  /**
+   * PUT /api/rules/:name - Update a business rule
+   */
+  app.put("/api/rules/:name", async (req: Request, res: Response) => {
+    try {
+      const { name } = req.params;
+      const updates = req.body;
+      const index = businessRules.findIndex(r => r.name === name);
+      
+      if (index === -1) {
+        return res.status(404).json({ error: "Rule not found" });
+      }
+      
+      businessRules[index] = { ...businessRules[index], ...updates };
+      res.json({ success: true, rule: businessRules[index] });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update rule" });
+    }
+  });
+
+  /**
+   * DELETE /api/rules/:name - Delete a business rule
+   */
+  app.delete("/api/rules/:name", async (req: Request, res: Response) => {
+    try {
+      const { name } = req.params;
+      const index = businessRules.findIndex(r => r.name === name);
+      
+      if (index === -1) {
+        return res.status(404).json({ error: "Rule not found" });
+      }
+      
+      businessRules.splice(index, 1);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete rule" });
+    }
+  });
+
+  /**
+   * User Profile API
+   */
+  
+  // In-memory user profiles (in production, use Supabase)
+  const userProfiles: Map<string, {
+    userId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    onboardingComplete: boolean;
+    preferences: {
+      theme: 'light' | 'dark' | 'system';
+      notifications: boolean;
+      language: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+  }> = new Map();
+
+  /**
+   * GET /api/user/profile - Get user profile
+   */
+  app.get("/api/user/profile", async (req: Request, res: Response) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const profile = userProfiles.get(userId);
+      
+      if (!profile) {
+        return res.json({ 
+          exists: false,
+          onboardingRequired: true 
+        });
+      }
+      
+      res.json({ exists: true, profile });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  /**
+   * POST /api/user/profile - Create or update user profile
+   */
+  app.post("/api/user/profile", async (req: Request, res: Response) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      const email = req.headers['x-user-email'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { firstName, lastName, phone, preferences } = req.body;
+      const now = new Date().toISOString();
+      
+      const existingProfile = userProfiles.get(userId);
+      
+      const profile = {
+        userId,
+        email: email || existingProfile?.email || '',
+        firstName: firstName || existingProfile?.firstName,
+        lastName: lastName || existingProfile?.lastName,
+        phone: phone || existingProfile?.phone,
+        onboardingComplete: true,
+        preferences: preferences || existingProfile?.preferences || {
+          theme: 'system',
+          notifications: true,
+          language: 'en'
+        },
+        createdAt: existingProfile?.createdAt || now,
+        updatedAt: now
+      };
+      
+      userProfiles.set(userId, profile);
+      res.json({ success: true, profile });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save profile" });
+    }
+  });
+
   return httpServer;
 }

@@ -15,6 +15,7 @@ interface ChatInterfaceProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  suggestedActions?: string[];
 }
 
 export function ChatInterface({
@@ -24,6 +25,7 @@ export function ChatInterface({
   disabled = false,
   placeholder = "Type your message...",
   className,
+  suggestedActions,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -91,7 +93,23 @@ export function ChatInterface({
         )}
       </div>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-4">
+        {suggestedActions && suggestedActions.length > 0 && !isLoading && !disabled && (
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {suggestedActions.map((action, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                size="sm"
+                className="rounded-full bg-background hover:bg-muted whitespace-nowrap"
+                onClick={() => onSendMessage(action)}
+              >
+                {action}
+              </Button>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <div className="relative flex-1">
             <Input

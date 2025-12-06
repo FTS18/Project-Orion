@@ -1,6 +1,7 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,7 +114,7 @@ export default function ContactPage() {
                 href={method.link}
                 className="block"
               >
-                <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+                <SpotlightCard className="h-full hover:border-primary/50 transition-colors cursor-pointer" spotlightColor="rgba(var(--primary), 0.1)">
                   <CardHeader>
                     <method.icon className="h-8 w-8 text-primary mb-3" aria-hidden="true" />
                     <h3 className="font-semibold text-foreground">{method.title}</h3>
@@ -122,7 +123,7 @@ export default function ContactPage() {
                   <CardContent>
                     <p className="font-medium text-primary text-sm">{method.contact}</p>
                   </CardContent>
-                </Card>
+                </SpotlightCard>
               </a>
             ))}
           </div>
@@ -131,7 +132,7 @@ export default function ContactPage() {
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             {/* Form */}
             <div className="md:col-span-2">
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.05)">
                 <CardHeader className="border-b">
                   <h2 className="text-2xl font-bold">Send us a Message</h2>
                   <p className="text-muted-foreground mt-2">Fill out the form below and we'll get back to you shortly</p>
@@ -200,12 +201,12 @@ export default function ContactPage() {
                     </Button>
                   </form>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </div>
 
             {/* Sidebar Info */}
             <div className="space-y-4">
-              <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+              <SpotlightCard className="bg-gradient-to-br from-primary/5 to-accent/5" spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -226,9 +227,9 @@ export default function ContactPage() {
                     <p>Mon-Fri 9AM-6PM EST</p>
                   </div>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h3 className="font-semibold">Emergency Support</h3>
                 </CardHeader>
@@ -238,7 +239,7 @@ export default function ContactPage() {
                     Call +1 (800) 555-0123
                   </a>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </div>
           </div>
 
@@ -247,14 +248,14 @@ export default function ContactPage() {
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqItems.map((item, idx) => (
-                <Card key={idx}>
+                <SpotlightCard key={idx} spotlightColor="rgba(var(--primary), 0.05)">
                   <CardHeader>
                     <h3 className="font-semibold text-foreground">{item.question}</h3>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">{item.answer}</p>
                   </CardContent>
-                </Card>
+                </SpotlightCard>
               ))}
             </div>
           </div>

@@ -1,6 +1,6 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 export default function PrivacyPage() {
   return (
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
           <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
 
           <div className="space-y-8">
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">1. Information We Collect</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -26,9 +26,9 @@ export default function PrivacyPage() {
                   <li>Document uploads for verification</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">2. How We Use Your Information</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>Your information is used for:</p>
@@ -41,9 +41,9 @@ export default function PrivacyPage() {
                   <li>Service improvement</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">3. Data Security</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -57,9 +57,9 @@ export default function PrivacyPage() {
                   <li>Compliance with international standards</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">4. Data Retention</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -75,9 +75,9 @@ export default function PrivacyPage() {
                   You may request deletion of your data at any time, subject to legal requirements.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">5. Sharing Your Information</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -93,9 +93,9 @@ export default function PrivacyPage() {
                   We never sell your information to third parties.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">6. Your Rights</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -110,9 +110,9 @@ export default function PrivacyPage() {
                   <li>Withdraw consent for processing</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">7. Cookies and Tracking</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -127,27 +127,27 @@ export default function PrivacyPage() {
                   You can control cookies through your browser settings.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">8. Third-Party Links</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   Our website may contain links to third-party websites. We are not responsible for their privacy practices. Please review their privacy policies before sharing information.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">9. Policy Changes</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   We may update this policy periodically. We will notify you of significant changes through email or prominent website notice. Your continued use constitutes acceptance of updated terms.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">10. Contact Us</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
                   <p>Email: privacy@projectorion.com</p>
                 </div>
               </div>
-            </Card>
+            </SpotlightCard>
 
             <p className="text-sm text-muted-foreground text-center">
               Last Updated: December 2024

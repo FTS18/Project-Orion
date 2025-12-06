@@ -1,6 +1,6 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 export default function TermsPage() {
   return (
@@ -12,14 +12,14 @@ export default function TermsPage() {
           <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
 
           <div className="space-y-8">
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground">
                 By using Project Orion, you agree to be bound by these Terms of Service. If you do not agree, please do not use the service.
               </p>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">2. Service Description</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -32,9 +32,9 @@ export default function TermsPage() {
                   <li>Instant loan decision generation</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">3. User Eligibility</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>You must be:</p>
@@ -45,9 +45,9 @@ export default function TermsPage() {
                   <li>Acting on your own behalf, not for others</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">4. User Responsibilities</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -61,18 +61,18 @@ export default function TermsPage() {
                   <li>Not using the service for illegal purposes</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">5. Intellectual Property</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   All content, features, and functionality are owned by Project Orion, protected by copyright and other intellectual property laws. Unauthorized use is prohibited.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">6. Limitation of Liability</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -85,9 +85,9 @@ export default function TermsPage() {
                   <li>Third-party actions</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">7. Disclaimer of Warranties</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -100,9 +100,9 @@ export default function TermsPage() {
                   <li>Freedom from errors or defects</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">8. Termination</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -115,18 +115,18 @@ export default function TermsPage() {
                   <li>Extended inactivity</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">9. Modifications</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   We may modify these terms at any time. Continued use constitutes acceptance of updated terms. Major changes will be communicated through email or website notice.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">10. Dispute Resolution</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -139,27 +139,27 @@ export default function TermsPage() {
                   <li>Governed by applicable law</li>
                 </ul>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">11. Governing Law</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   These terms are governed by and construed in accordance with applicable laws, and you irrevocably submit to the exclusive jurisdiction of the courts.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">12. Entire Agreement</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   These terms, including our Privacy Policy, constitute the entire agreement between you and Project Orion and supersede all prior agreements.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">13. Contact Information</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -170,7 +170,7 @@ export default function TermsPage() {
                   <p>Email: legal@projectorion.com</p>
                 </div>
               </div>
-            </Card>
+            </SpotlightCard>
 
             <p className="text-sm text-muted-foreground text-center">
               Last Updated: December 2024

@@ -118,47 +118,40 @@ class UnderwritingAgent:
         pre_approved_limit = customer.preApprovedLimit if customer else 300000
         
         # Evaluation rules
-        rejection_reason = None
+        from backend.services.rules_engine import rules_engine
+        
+        # Prepare context for rules engine
+        # Note: Keys must match RuleType enum values in rules_engine.py
+        context = {
+            "credit_score_min": credit_score,
+            "amount_vs_preapproved": loan_amount / pre_approved_limit if pre_approved_limit > 0 else 999,
+            "emi_income_ratio": (monthly_emi / monthly_income * 100) if monthly_income > 0 else 100,
+            "existing_loan_check": "no",  # Mock value as we don't have this in customer data yet
+            "age_restriction": 30,  # Mock value
+            "employment_type": "Salaried" # Mock value
+        }
+        
+        # Evaluate using rules engine
+        decision, reason = rules_engine.evaluate_all(context)
+        
+        # Determine if docs are needed (custom logic not yet in rules engine, keeping it simple)
         needs_docs = False
-        decision = "PENDING"
-        
-        # Rule 1: Check credit score
-        if credit_score < 700:
-            decision = "REJECT"
-            rejection_reason = f"Credit score {credit_score}/900 is below minimum requirement of 700"
-        
-        # Rule 2: Check against pre-approved limit
-        elif loan_amount <= pre_approved_limit:
-            decision = "APPROVE"
-        
-        # Rule 3: Check against 2x pre-approved limit
-        elif loan_amount <= 2 * pre_approved_limit:
-            # Need salary slip verification
-            emi_ratio = (monthly_emi / monthly_income * 100) if monthly_income > 0 else 100
-            if emi_ratio <= 50:
-                decision = "APPROVE"
-                needs_docs = True
-            else:
-                decision = "REJECT"
-                rejection_reason = f"EMI to income ratio {emi_ratio:.1f}% exceeds 50% limit"
-        
-        # Rule 4: Beyond 2x limit = auto reject
-        else:
-            decision = "REJECT"
-            rejection_reason = f"Loan amount exceeds 2x pre-approved limit (₹{2 * pre_approved_limit:,})"
-        
+        if decision == "APPROVE" and loan_amount > pre_approved_limit:
+             needs_docs = True
+
         return {
             "status": "success",
             "decision": decision,
             "credit_score": credit_score,
             "pre_approved_limit": pre_approved_limit,
             "needs_salary_slip": needs_docs,
-            "rejection_reason": rejection_reason,
+            "rejection_reason": reason if decision == "REJECT" else None,
             "message": f"{'✅ APPROVED' if decision == 'APPROVE' else '❌ REJECTED'}\n\n"
                       f"Credit Score: {credit_score}/900\n"
                       f"Pre-approved Limit: ₹{pre_approved_limit:,}\n"
                       f"Requested Amount: ₹{loan_amount:,.0f}\n"
-                      f"{f'Monthly EMI vs Income: {(monthly_emi/monthly_income*100):.1f}%' if monthly_income > 0 else ''}"
+                      f"{f'Monthly EMI vs Income: {(monthly_emi/monthly_income*100):.1f}%' if monthly_income > 0 else ''}\n"
+                      f"Reason: {reason}"
         }
 
 

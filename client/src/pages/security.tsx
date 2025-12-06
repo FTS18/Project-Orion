@@ -1,6 +1,7 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import {
   Lock,
   Shield,
@@ -78,7 +79,7 @@ export default function SecurityPage() {
           {/* Security Features Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-16">
             {securityFeatures.map((feature, idx) => (
-              <Card key={idx} className="hover:border-primary/50 transition-colors">
+              <SpotlightCard key={idx} className="hover:border-primary/50 transition-colors" spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <feature.icon className="h-8 w-8 text-primary mb-2" aria-hidden="true" />
                   <h3 className="text-lg font-semibold">{feature.title}</h3>
@@ -94,7 +95,7 @@ export default function SecurityPage() {
                     ))}
                   </ul>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             ))}
           </div>
 
@@ -103,7 +104,7 @@ export default function SecurityPage() {
             <h2 className="text-2xl font-bold mb-6">Compliance & Standards</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {complianceItems.map((item, idx) => (
-                <Card key={idx} className="p-4">
+                <SpotlightCard key={idx} className="p-4" spotlightColor="rgba(var(--primary), 0.05)">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-foreground">{item.label}</h3>
@@ -117,7 +118,7 @@ export default function SecurityPage() {
                       {item.status === "compliant" ? "✓ Compliant" : "In Progress"}
                     </div>
                   </div>
-                </Card>
+                </SpotlightCard>
               ))}
             </div>
           </div>
@@ -126,7 +127,7 @@ export default function SecurityPage() {
           <div className="mb-16">
             <h2 className="text-2xl font-bold mb-6">Our Security Practices</h2>
             <div className="space-y-4">
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Cpu className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -139,9 +140,9 @@ export default function SecurityPage() {
                   <p>• Continuous integration with security tests</p>
                   <p>• Dependency vulnerability scanning</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Network className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -154,9 +155,9 @@ export default function SecurityPage() {
                   <p>• SSL/TLS certificate pinning</p>
                   <p>• Regular penetration testing</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -169,12 +170,12 @@ export default function SecurityPage() {
                   <p>• Breach notification procedures</p>
                   <p>• Regular disaster recovery drills</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </div>
           </div>
 
           {/* Data Privacy */}
-          <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
+          <SpotlightCard className="bg-gradient-to-r from-primary/5 to-accent/5" spotlightColor="rgba(var(--primary), 0.1)">
             <CardHeader>
               <h2 className="text-2xl font-bold">Data Privacy</h2>
             </CardHeader>
@@ -196,7 +197,7 @@ export default function SecurityPage() {
                 </p>
               </div>
             </CardContent>
-          </Card>
+          </SpotlightCard>
 
           {/* Support Section */}
           <div className="mt-12 text-center">

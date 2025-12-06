@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Header } from "@/components/header";
+import Header from "@/components/header";
 import { WizardStepper, WizardNavigation } from "@/components/wizard-stepper";
 import { FileUpload } from "@/components/file-upload";
 import { CustomerDataCard, LoanRequestCard, UnderwritingResultCard } from "@/components/data-card";
@@ -349,7 +350,7 @@ export default function StandardModePage() {
             className="mb-8"
           />
 
-          <Card className="animate-fade-in">
+          <SpotlightCard className="animate-fade-in" spotlightColor="rgba(var(--primary), 0.05)">
             <CardContent className="p-6 md:p-8">
               {currentStep === 1 && (
                 <Step1CustomerDetails
@@ -415,7 +416,7 @@ export default function StandardModePage() {
                 submitLabel="Submit for Decision"
               />
             </CardContent>
-          </Card>
+          </SpotlightCard>
         </div>
       </main>
 
@@ -514,7 +515,7 @@ function Step1CustomerDetails({
             
             {creditData && (
               <div className="mt-4 grid grid-cols-2 gap-4">
-                <Card className="p-4">
+                <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.1)">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Credit Score</p>
                   <p className={cn(
                     "text-2xl font-bold",
@@ -523,13 +524,13 @@ function Step1CustomerDetails({
                   )}>
                     {creditData.score}
                   </p>
-                </Card>
-                <Card className="p-4">
+                </SpotlightCard>
+                <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.1)">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Pre-Approved Limit</p>
                   <p className="text-2xl font-bold text-primary">
                     ₹{creditData.preApprovedLimit.toLocaleString('en-IN')}
                   </p>
-                </Card>
+                </SpotlightCard>
               </div>
             )}
           </div>
@@ -643,7 +644,7 @@ function Step2Documents({
         />
 
         {salaryData && (
-          <Card className="mt-4 p-4 bg-green-500/5 border-green-500/20 animate-fade-in">
+          <SpotlightCard className="mt-4 p-4 bg-green-500/5 border-green-500/20 animate-fade-in" spotlightColor="rgba(34, 197, 94, 0.1)">
             <div className="flex items-center gap-2 mb-3">
               <CheckCircle className="h-5 w-5 text-green-500" aria-hidden="true" />
               <h3 className="font-medium">Salary Information Extracted</h3>
@@ -662,7 +663,7 @@ function Step2Documents({
                 <p className="font-semibold">{salaryData.employer}</p>
               </div>
             </div>
-          </Card>
+          </SpotlightCard>
         )}
       </div>
 
@@ -720,12 +721,17 @@ function Step3Verification({
         )}
 
         {kycResult && (
-          <Card className={cn(
+          <SpotlightCard className={cn(
             "p-6 animate-fade-in",
             kycResult.status === "VERIFIED" && "bg-green-500/5 border-green-500/20",
             kycResult.status === "PENDING" && "bg-yellow-500/5 border-yellow-500/20",
             kycResult.status === "FAILED" && "bg-red-500/5 border-red-500/20"
-          )}>
+          )}
+          spotlightColor={
+            kycResult.status === "VERIFIED" ? "rgba(34, 197, 94, 0.1)" :
+            kycResult.status === "PENDING" ? "rgba(234, 179, 8, 0.1)" :
+            "rgba(239, 68, 68, 0.1)"
+          }>
             <div className="flex items-center gap-3 mb-4">
               <StatusBadge status={kycResult.status} />
               <span className="text-sm text-muted-foreground">
@@ -751,7 +757,7 @@ function Step3Verification({
                 </ul>
               </div>
             )}
-          </Card>
+          </SpotlightCard>
         )}
       </div>
 
@@ -799,7 +805,7 @@ function Step4Review({
           {loanRequest && <LoanRequestCard loanRequest={loanRequest} />}
           
           <div className="grid md:grid-cols-2 gap-4">
-            <Card className="p-4">
+            <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.1)">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium">KYC Status</p>
@@ -809,9 +815,9 @@ function Step4Review({
               ) : (
                 <span className="text-sm text-muted-foreground">Not verified</span>
               )}
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-4">
+            <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.1)">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium">Salary Verification</p>
@@ -821,12 +827,12 @@ function Step4Review({
               ) : (
                 <span className="text-sm text-muted-foreground">Not provided</span>
               )}
-            </Card>
+            </SpotlightCard>
           </div>
         </div>
 
         {isProcessing && (
-          <Card className="p-6 mt-6 animate-fade-in">
+          <SpotlightCard className="p-6 mt-6 animate-fade-in" spotlightColor="rgba(var(--primary), 0.1)">
             <div className="flex items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
               <div>
@@ -834,7 +840,7 @@ function Step4Review({
                 <p className="text-sm text-muted-foreground">This may take a few moments</p>
               </div>
             </div>
-          </Card>
+          </SpotlightCard>
         )}
 
         {underwritingResult && (

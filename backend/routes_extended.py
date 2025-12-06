@@ -10,9 +10,11 @@ import json
 from datetime import datetime
 
 # These would be imported from your services
-# from backend.services.rules_engine import rules_engine, BusinessRule
+# from backend.services.rules_engine import rules_engine, BusinessRule  # TODO: Fix for Pydantic v2
 # from backend.services.ab_testing import ab_testing_framework
 # from backend.services.performance_analytics import performance_tracker
+
+extended_router = APIRouter()  # Empty router for now
 
 router = APIRouter()
 
@@ -23,16 +25,22 @@ router = APIRouter()
 @router.get("/api/rules")
 async def get_rules():
     """Get all active business rules"""
-    # return {"rules": rules_engine.get_rules()}
-    return {"rules": []}  # Placeholder
+    return {"rules": rules_engine.get_rules()}
 
 
 @router.post("/api/rules")
 async def create_rule(rule_data: Dict[str, Any]):
     """Create a new business rule"""
     try:
-        # new_rule = BusinessRule(**rule_data)
-        # rules_engine.add_rule(new_rule)
+        # Convert string enums to Enum objects if needed, or let Pydantic handle it if we used Pydantic models
+        # But here we are using Dict, so we might need to be careful.
+        # However, BusinessRule is a dataclass.
+        # Let's assume the input matches the dataclass fields.
+        # We might need to handle Enum conversion manually if the JSON sends strings.
+        
+        # Simple instantiation - might need adjustment for Enums
+        new_rule = BusinessRule(**rule_data)
+        rules_engine.add_rule(new_rule)
         return {"success": True, "message": "Rule created"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -42,7 +50,7 @@ async def create_rule(rule_data: Dict[str, Any]):
 async def update_rule(rule_name: str, updates: Dict[str, Any]):
     """Update an existing rule"""
     try:
-        # rules_engine.update_rule(rule_name, **updates)
+        rules_engine.update_rule(rule_name, **updates)
         return {"success": True, "message": f"Rule '{rule_name}' updated"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -52,7 +60,7 @@ async def update_rule(rule_name: str, updates: Dict[str, Any]):
 async def delete_rule(rule_name: str):
     """Delete a rule"""
     try:
-        # rules_engine.remove_rule(rule_name)
+        rules_engine.remove_rule(rule_name)
         return {"success": True, "message": f"Rule '{rule_name}' deleted"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -62,10 +70,10 @@ async def delete_rule(rule_name: str):
 async def evaluate_rules(context: Dict[str, Any]):
     """Evaluate all rules against provided context"""
     try:
-        # decision, reason = rules_engine.evaluate_all(context)
+        decision, reason = rules_engine.evaluate_all(context)
         return {
-            "decision": "APPROVE",  # Placeholder
-            "reason": "All rules passed",
+            "decision": decision,
+            "reason": reason,
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:

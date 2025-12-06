@@ -155,10 +155,55 @@ Let me share a personalized offer based on your profile..."""
             return "Welcome! I'm your AI Loan Assistant. Please provide your Customer ID (e.g., CUST001) to continue."
 
     async def _handle_sales(self, ctx: ConversationContext, message: str) -> str:
-        """Sales agent negotiates loan terms"""
+        """Sales agent negotiates loan terms and collects basic info"""
         ctx.add_agent_state("sales", "active", "Negotiating terms", 35)
         ctx.add_log("master", "stage", "Entering sales stage", "info")
         
+        # Check for missing data
+        missing_fields = []
+        if "age" not in ctx.customer_data:
+            missing_fields.append("age")
+        if "employment_type" not in ctx.customer_data:
+            missing_fields.append("employment_type")
+        if "existing_loans" not in ctx.customer_data:
+            missing_fields.append("existing_loans")
+            
+        # If message contains data, try to extract it (simple keyword matching for now)
+        # In a real app, use an LLM or regex to extract
+        lower_msg = message.lower()
+        if "age" in missing_fields and any(char.isdigit() for char in message):
+            # Very naive extraction - just finding a number
+            import re
+            nums = re.findall(r'\d+', message)
+            if nums:
+                ctx.customer_data["age"] = int(nums[0])
+                missing_fields.remove("age")
+        
+        if "employment_type" in missing_fields:
+            if "salaried" in lower_msg:
+                ctx.customer_data["employment_type"] = "Salaried"
+                missing_fields.remove("employment_type")
+            elif "self" in lower_msg or "business" in lower_msg:
+                ctx.customer_data["employment_type"] = "Self-Employed"
+                missing_fields.remove("employment_type")
+                
+        if "existing_loans" in missing_fields:
+            if "no" in lower_msg or "none" in lower_msg:
+                ctx.customer_data["existing_loans"] = "no"
+                missing_fields.remove("existing_loans")
+            elif "yes" in lower_msg:
+                ctx.customer_data["existing_loans"] = "yes"
+                missing_fields.remove("existing_loans")
+
+        # If still missing data, ask for it
+        if missing_fields:
+            if "age" in missing_fields:
+                return "Before we proceed, could you please tell me your **age**?"
+            if "employment_type" in missing_fields:
+                return "Are you **Salaried** or **Self-Employed**?"
+            if "existing_loans" in missing_fields:
+                return "Do you have any **existing loans**? (Yes/No)"
+
         # Call sales agent
         sales_result = await self.sales_agent.negotiate(ctx.customer_data)
         

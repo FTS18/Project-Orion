@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Min Credit Score",
+    "rule_type": "credit_score_min",
+    "operator": "gte",
+    "threshold": 700,
+    "action": "APPROVE",
+    "priority": 100,
+    "description": "Credit score must be at least 700",
+    "enabled": true
+  },
+  {
+    "name": "EMI Income Ratio",
+    "rule_type": "emi_income_ratio",
+    "operator": "lte",
+    "threshold": 50,
+    "action": "APPROVE",
+    "priority": 90,
+    "description": "EMI should not exceed 50% of monthly income",
+    "enabled": true
+  },
+  {
+    "name": "Existing Loan Check",
+    "rule_type": "existing_loan_check",
+    "operator": "eq",
+    "threshold": "no",
+    "action": "APPROVE",
+    "priority": 80,
+    "description": "Prefer customers with no existing loans",
+    "enabled": true
+  }
+]

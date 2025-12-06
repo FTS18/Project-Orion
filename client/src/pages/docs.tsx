@@ -1,6 +1,7 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpen,
@@ -45,7 +46,7 @@ export default function DocsPage() {
 
             {/* Getting Started */}
             <TabsContent value="getting-started" className="space-y-4 mt-6">
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-xl font-semibold">Getting Started with Project Orion</h2>
                   <CardDescription>Begin your loan application journey in just a few steps</CardDescription>
@@ -82,9 +83,9 @@ export default function DocsPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-xl font-semibold">Standard Mode</h2>
                   <CardDescription>Step-by-step guided wizard flow</CardDescription>
@@ -95,9 +96,9 @@ export default function DocsPage() {
                   <p>• Manual control over each step</p>
                   <p>• Perfect for users who prefer guided processes</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-xl font-semibold">Agentic AI Mode</h2>
                   <CardDescription>Conversational AI-assisted processing</CardDescription>
@@ -108,12 +109,12 @@ export default function DocsPage() {
                   <p>• Real-time agent status tracking</p>
                   <p>• Ideal for seamless automation</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </TabsContent>
 
             {/* API Guide */}
             <TabsContent value="api" className="space-y-4 mt-6">
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-xl font-semibold">API Endpoints</h2>
                   <CardDescription>Backend API reference</CardDescription>
@@ -142,9 +143,9 @@ export default function DocsPage() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
 
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-xl font-semibold">Agent API</h2>
                   <CardDescription>Multi-agent orchestration</CardDescription>
@@ -156,12 +157,12 @@ export default function DocsPage() {
                   <p>• Underwriting Agent makes decisions</p>
                   <p>• Sanction Agent generates documents</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </TabsContent>
 
             {/* FAQ */}
             <TabsContent value="faq" className="space-y-4 mt-6">
-              <Card>
+              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-lg font-semibold">Frequently Asked Questions</h2>
                 </CardHeader>
@@ -197,7 +198,7 @@ export default function DocsPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
             </TabsContent>
           </Tabs>
         </div>

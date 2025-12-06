@@ -1,6 +1,6 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { Card } from "@/components/ui/card";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -44,16 +44,16 @@ export default function CookiesPage() {
           <h1 className="text-4xl font-bold mb-8">Cookie Policy</h1>
 
           <div className="space-y-8">
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">What Are Cookies?</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   Cookies are small text files stored on your device that help websites function and remember your preferences. They are widely used to enhance user experience.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Our Cookie Policy</h2>
               <div className="space-y-6">
                 {cookieTypes.map((cookie) => (
@@ -76,9 +76,9 @@ export default function CookiesPage() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Managing Your Preferences</h2>
               <div className="space-y-6">
                 {cookieTypes.map((cookie) => (
@@ -106,9 +106,9 @@ export default function CookiesPage() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">How to Control Cookies</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -133,9 +133,9 @@ export default function CookiesPage() {
                   </div>
                 </div>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Third-Party Cookies</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -150,26 +150,26 @@ export default function CookiesPage() {
                   You can control third-party cookies through your browser settings or opt-out services.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Updates to This Policy</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   We may update this cookie policy periodically to reflect changes in technology, legal requirements, or our practices. We will notify you of significant changes through email or website notice.
                 </p>
               </div>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6 bg-gradient-to-r from-primary/5 to-accent/5">
+            <SpotlightCard className="p-6 bg-gradient-to-r from-primary/5 to-accent/5" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Save Your Preferences</h2>
               <p className="text-muted-foreground mb-6">
                 Your cookie preferences have been updated. They will be saved in your browser and applied to future visits.
               </p>
               <Button className="w-full">Save & Accept</Button>
-            </Card>
+            </SpotlightCard>
 
-            <Card className="p-6">
+            <SpotlightCard className="p-6" spotlightColor="rgba(var(--primary), 0.1)">
               <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
@@ -180,7 +180,7 @@ export default function CookiesPage() {
                   <p>Email: privacy@projectorion.com</p>
                 </div>
               </div>
-            </Card>
+            </SpotlightCard>
 
             <p className="text-sm text-muted-foreground text-center">
               Last Updated: December 2024

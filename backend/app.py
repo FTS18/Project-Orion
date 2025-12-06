@@ -26,48 +26,40 @@ from backend.models.schemas import (
     AuditLogEntry,
     ChatRequest,
     ChatResponse,
-    AgentState,
-    WorkflowLogEntry,
+    WorkflowLogEntry
 )
 from backend.storage.data import StorageManager
-from backend.services.kyc import KycVerificationService
-from backend.services.underwriting import UnderwritingEngine
-from backend.agents.orchestrator import master_agent
-from backend.services.ollama_client import generate_chat_response
+from backend.agents.orchestrator import MasterAgent
+from backend.routes_extended import extended_router
 
-
-# Lifespan events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("[STARTUP] FastAPI backend starting on port 8000")
+    print("Starting up Project Orion Backend...")
     yield
     # Shutdown
-    print("[SHUTDOWN] FastAPI backend shutting down")
+    print("Shutting down...")
 
+app = FastAPI(title="Project Orion Backend", lifespan=lifespan)
 
-# Create FastAPI app
-app = FastAPI(
-    title="Project Orion Backend",
-    description="Agentic AI Loan Assistant - FastAPI",
-    version="1.0.0",
-    lifespan=lifespan,
-)
-
-# CORS middleware
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# ============================================================================
-# REST API ENDPOINTS (10 total)
-# ============================================================================
-
+# Include Extended Routes (Rules Engine, etc.)
+app.include_router(extended_router)
 
 @app.get("/api/health")
 async def health_check():
@@ -231,11 +223,25 @@ async def download_sanction(reference_number: str):
 
 @app.post("/api/agent/chat", response_model=ChatResponse)
 async def agent_chat(request: ChatRequest):
-    """Chat with agentic AI system"""
-
-    # Process message through master agent
-    result = await master_agent(request.customerId, request.message)
-
+    """Chat with agentic AI system powered by Ollama"""
+    
+    from backend.agents.ai_orchestrator import ai_orchestrator
+    
+    # Use provided user profile or extract if customer_id starts with USER_
+    user_profile = request.userProfile
+    
+    if not user_profile and request.customerId.startswith("USER_"):
+        # Fallback if profile wasn't passed but it's a user ID
+        # In a real app, we'd fetch from DB here
+        pass
+    
+    # Process message through AI orchestrator
+    result = await ai_orchestrator.process_message(
+        request.customerId,
+        request.message,
+        user_profile
+    )
+    
     return ChatResponse(
         id=result.get("id"),
         customerId=result.get("customerId"),
@@ -249,7 +255,9 @@ async def agent_chat(request: ChatRequest):
 
 @app.websocket("/ws/chat/{customer_id}")
 async def websocket_chat(websocket: WebSocket, customer_id: str):
-    """WebSocket endpoint for real-time chat"""
+    """WebSocket endpoint for real-time chat with Ollama"""
+    from backend.agents.ai_orchestrator import ai_orchestrator
+    
     await websocket.accept()
 
     try:
@@ -260,9 +268,23 @@ async def websocket_chat(websocket: WebSocket, customer_id: str):
 
             if not user_message:
                 continue
+            
+            # Extract user profile
+            user_profile = None
+            if customer_id.startswith("USER_"):
+                user_id = customer_id.replace("USER_", "")
+                user_profile = {
+                    "user_id": user_id,
+                    "name": "User",
+                    "email": "user@example.com",
+                }
 
-            # Process through master agent
-            result = await master_agent(customer_id, user_message)
+            # Process through AI orchestrator
+            result = await ai_orchestrator.process_message(
+                customer_id,
+                user_message,
+                user_profile
+            )
 
             # Send response back
             await websocket.send_json(result)

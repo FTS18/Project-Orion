@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AgentStatusIndicator, StatusBadge } from "@/components/status-badge";
+import { CardContent, CardHeader } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { AgentStatusIndicator } from "@/components/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AgentType, AgentStatus, AgentMessage } from "@shared/schema";
 import { Users, Shield, Calculator, FileText, ChevronDown, ChevronUp } from "lucide-react";
@@ -71,12 +72,13 @@ export function AgentPanel({
   const config = agentConfig[agentType];
 
   return (
-    <Card 
+    <SpotlightCard 
       className={cn(
         "transition-all duration-300",
         status === "active" && "ring-2 ring-primary/50",
         className
       )}
+      spotlightColor="rgba(var(--primary), 0.1)"
       data-testid={`agent-panel-${agentType}`}
     >
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -169,7 +171,7 @@ export function AgentPanel({
           </CollapsibleContent>
         </CardContent>
       </Collapsible>
-    </Card>
+    </SpotlightCard>
   );
 }
 

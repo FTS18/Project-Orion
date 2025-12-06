@@ -12,7 +12,7 @@ function getApiBaseUrl(): string {
     typeof window !== "undefined" &&
     window.location.hostname === "localhost"
   ) {
-    return "http://localhost:5000";
+    return "http://localhost:8000";
   }
 
   // For Vercel/hosted frontend (no backend - will use mock data)

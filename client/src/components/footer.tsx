@@ -8,7 +8,10 @@ import {
   FileText,
   Shield,
   Brain,
-  Zap
+  Zap,
+  Home,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +23,7 @@ export function Footer() {
     {
       title: "Product",
       links: [
+        { label: "Home", href: "/", icon: Home },
         { label: "Standard Mode", href: "/standard", icon: FileText },
         { label: "Agentic AI Mode", href: "/agentic", icon: Brain },
         { label: "Features", href: "/features", icon: Zap },
@@ -34,10 +38,10 @@ export function Footer() {
       ]
     },
     {
-      title: "Legal",
+      title: "Account",
       links: [
-        { label: "Terms of Service", href: "/terms", icon: FileText },
-        { label: "Cookie Policy", href: "/cookies", icon: FileText },
+        { label: "Sign In", href: "/auth/login", icon: LogIn },
+        { label: "Create Account", href: "/auth/signup", icon: UserPlus },
         { label: "Contact Us", href: "/contact", icon: Mail },
       ]
     }
@@ -140,3 +144,5 @@ export function Footer() {
     </footer>
   );
 }
+
+export default Footer;

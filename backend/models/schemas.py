@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Simplified Pydantic models for API validation
 """
@@ -129,10 +130,10 @@ class UnderwritingRequest(BaseModel):
 class UnderwritingResult(BaseModel):
     decision: str
     reason: str
-    requiredAction: Optional[str] = None
-    emi: Optional[float] = None
-    totalAmount: Optional[float] = None
-    referenceNumber: Optional[str] = None
+    requiredAction: Optional[str] = Field(default=None)
+    emi: Optional[float] = Field(default=None)
+    totalAmount: Optional[float] = Field(default=None)
+    referenceNumber: Optional[str] = Field(default=None)
 
 
 class SanctionLetterRequest(BaseModel):
@@ -186,6 +187,7 @@ class WorkflowLogEntry(BaseModel):
 class ChatRequest(BaseModel):
     customerId: str
     message: str
+    userProfile: Optional[Dict[str, Any]] = None
 
 
 class ChatResponse(BaseModel):

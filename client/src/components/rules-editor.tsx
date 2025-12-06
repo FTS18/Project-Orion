@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
+import { SpotlightCard } from './ui/spotlight-card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
@@ -176,7 +176,7 @@ export const RulesEditor: React.FC<RuleEditorProps> = ({ onClose }) => {
       {/* Rules List */}
       <div className="space-y-2">
         {rules.map((rule) => (
-          <Card key={rule.name} className="p-4">
+          <SpotlightCard key={rule.name} className="p-4" spotlightColor="rgba(var(--primary), 0.05)">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
@@ -214,7 +214,7 @@ export const RulesEditor: React.FC<RuleEditorProps> = ({ onClose }) => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </SpotlightCard>
         ))}
       </div>
 
@@ -270,11 +270,18 @@ const RuleForm: React.FC<RuleFormProps> = ({
       alert('Please enter a rule name');
       return;
     }
-    onSave(formData);
+
+    // Auto-convert threshold to number if it looks like one
+    let finalThreshold = formData.threshold;
+    if (!isNaN(Number(formData.threshold)) && formData.threshold !== '') {
+      finalThreshold = Number(formData.threshold);
+    }
+
+    onSave({ ...formData, threshold: finalThreshold });
   };
 
   return (
-    <Card className="p-6 bg-secondary/30">
+    <SpotlightCard className="p-6 bg-secondary/30" spotlightColor="rgba(var(--primary), 0.1)">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -378,7 +385,7 @@ const RuleForm: React.FC<RuleFormProps> = ({
           </Button>
         </div>
       </form>
-    </Card>
+    </SpotlightCard>
   );
 };
 
