@@ -133,41 +133,41 @@ export default function LandingPage() {
       {/* Global Animated Background */}
       {/* Global Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
         <motion.div 
           animate={{ 
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            opacity: [0.2, 0.4, 0.2],
             x: [0, 100, 0],
             y: [0, 50, 0]
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] bg-primary/20 rounded-full blur-[120px]"
+          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[120px]"
         />
         <motion.div 
           animate={{ 
             scale: [1, 1.3, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.2, 0.4, 0.2],
             x: [0, -50, 0],
             y: [0, 100, 0]
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-purple-500/20 rounded-full blur-[120px]"
+          className="absolute top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-purple-500/10 rounded-full blur-[120px]"
         />
         <motion.div 
           animate={{ 
             scale: [1, 1.1, 1],
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.1, 0.3, 0.1],
             x: [0, 60, 0],
             y: [0, -60, 0]
           }}
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute bottom-[10%] right-[10%] w-[60vw] h-[60vw] bg-blue-500/20 rounded-full blur-[120px]"
+          className="absolute bottom-[10%] right-[10%] w-[60vw] h-[60vw] bg-blue-500/10 rounded-full blur-[120px]"
         />
         <motion.div 
           animate={{ 
             scale: [1, 1.4, 1],
-            opacity: [0.1, 0.3, 0.1],
+            opacity: [0.1, 0.2, 0.1],
             x: [0, -40, 0],
             y: [0, -40, 0]
           }}
@@ -274,7 +274,7 @@ export default function LandingPage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-purple-500/5 rounded-3xl transform rotate-3 scale-105" />
                 <SpotlightCard 
-                  className="relative p-6 bg-background/60 backdrop-blur-xl border-white/10 shadow-2xl rounded-3xl overflow-hidden" 
+                  className="relative p-6 bg-white/40 dark:bg-black/40 backdrop-blur-xl border-black/5 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden" 
                   spotlightColor="rgba(var(--primary), 0.15)"
                   hoverScale
                 >
@@ -291,7 +291,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-12 border-y border-white/5 bg-white/5 backdrop-blur-sm">
+        <section className="py-12 border-y border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => {
@@ -430,7 +430,7 @@ export default function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -5, rotate: i % 2 === 0 ? 1 : -1 }}
-                  className="group relative overflow-hidden rounded-3xl border border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/5 p-8 backdrop-blur-md shadow-lg hover:shadow-primary/5 transition-all duration-300"
+                  className="group relative overflow-hidden rounded-3xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 p-8 backdrop-blur-md shadow-lg hover:shadow-primary/5 transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <h4 className="text-xl font-bold text-foreground mb-6 relative z-10 flex items-center gap-2">
@@ -439,7 +439,7 @@ export default function LandingPage() {
                   </h4>
                   <div className="flex flex-wrap gap-2 relative z-10">
                     {tech.tools.split(', ').map((tool, idx) => (
-                      <span key={idx} className="px-3 py-1.5 rounded-full bg-background/40 text-sm font-medium border border-black/5 dark:border-white/5 text-muted-foreground group-hover:text-foreground group-hover:border-primary/20 transition-all">
+                      <span key={idx} className="px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 text-sm font-medium border border-black/5 dark:border-white/5 text-muted-foreground group-hover:text-foreground group-hover:border-primary/20 transition-all">
                         {tool}
                       </span>
                     ))}
@@ -564,7 +564,7 @@ export default function LandingPage() {
                     className="relative group w-full max-w-[240px]"
                   >
                     {/* Premium Glass Card */}
-                    <div className="relative h-80 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-6 flex flex-col items-center text-center overflow-hidden transition-all duration-500 group-hover:border-primary/30 group-hover:bg-white/10 group-hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)]">
+                    <div className="relative h-80 rounded-3xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md p-6 flex flex-col items-center text-center overflow-hidden transition-all duration-500 group-hover:border-primary/30 group-hover:bg-white/60 dark:group-hover:bg-black/60 group-hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)]">
                        
                        {/* Subtle Gradient Overlay */}
                        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -631,7 +631,7 @@ export default function LandingPage() {
           </motion.div>
         </section>
         {/* Trusted By Section */}
-        <section className="py-12 border-t border-white/5 bg-white/5 backdrop-blur-sm">
+        <section className="py-12 border-t border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <motion.div 
               initial={{ opacity: 0 }}
