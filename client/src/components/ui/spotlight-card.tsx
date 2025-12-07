@@ -40,6 +40,8 @@ export function SpotlightCard({
     setIsHovered(false);
   };
 
+  const { onAnimationStart, onAnimationEnd, onDrag, onDragStart, onDragEnd, ...motionSafeProps } = props;
+  
   return (
     <motion.div
       ref={divRef}
@@ -52,27 +54,28 @@ export function SpotlightCard({
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
         "relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300",
+        "[&>*]:overflow-hidden", // Ensure all children clip their content
         borderGlow && isHovered && "border-primary/30 shadow-lg shadow-primary/5",
         !isHovered && "border-border",
         className
       )}
-      {...props}
+      {...motionSafeProps}
     >
       {/* Main spotlight effect - follows cursor */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-500"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 rounded-xl"
         style={{
           opacity,
-          background: `radial-gradient(400px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          background: `radial-gradient(300px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
       
       {/* Secondary ambient glow effect */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-500"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 rounded-xl"
         style={{
           opacity: opacity * 0.5,
-          background: `radial-gradient(800px circle at ${position.x}px ${position.y}px, ${spotlightColor.replace('0.15', '0.05')}, transparent 60%)`,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor.replace('0.15', '0.05')}, transparent 60%)`,
         }}
       />
       

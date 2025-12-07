@@ -7,6 +7,8 @@ export interface UserProfile {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  age?: number;
+  city?: string;
   onboardingComplete: boolean;
   monthlySalary?: number;
   employmentType?: string;
@@ -46,6 +48,8 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     firstName: meta?.first_name,
     lastName: meta?.last_name,
     phone: meta?.phone,
+    age: meta?.age,
+    city: meta?.city,
     onboardingComplete: meta?.onboarding_complete || false,
     monthlySalary: meta?.monthly_salary,
     employmentType: meta?.employment_type,

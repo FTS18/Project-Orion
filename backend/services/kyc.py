@@ -15,6 +15,13 @@ class KycVerificationService:
     ) -> KycVerificationResponse:
         """Verify KYC details"""
 
+        # Demo mode: Auto-verify custom customers
+        if customer_id.startswith("CUSTOM"):
+            return KycVerificationResponse(
+                status=KYCStatus.VERIFIED,
+                mismatches=[],
+            )
+
         crm_record = StorageManager.get_crm_record(customer_id)
         if not crm_record:
             return KycVerificationResponse(

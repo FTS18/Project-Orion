@@ -16,6 +16,8 @@ import Footer from "@/components/footer";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/lib/theme-provider";
+import { GrainyBackground } from "@/components/ui/grainy-background";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const [, navigate] = useLocation();
@@ -29,6 +31,8 @@ export default function ProfilePage() {
     firstName: "",
     lastName: "",
     phone: "",
+    age: "",
+    city: "",
     notifications: true,
     monthlySalary: "",
     employmentType: "salaried" as "salaried" | "self_employed",
@@ -58,6 +62,8 @@ export default function ProfilePage() {
           firstName: user.user_metadata.first_name || "",
           lastName: user.user_metadata.last_name || "",
           phone: user.user_metadata.phone || "",
+          age: (user.user_metadata.age || "").toString(),
+          city: user.user_metadata.city || "",
           notifications: user.user_metadata.notifications !== false,
           monthlySalary: salary.toString(),
           employmentType: user.user_metadata.employment_type || "salaried",
@@ -87,6 +93,8 @@ export default function ProfilePage() {
           first_name: formData.firstName,
           last_name: formData.lastName,
           phone: formData.phone,
+          age: parseInt(formData.age) || 0,
+          city: formData.city,
           notifications: formData.notifications,
           monthly_salary: salary,
           employment_type: formData.employmentType,
@@ -124,39 +132,57 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      <GrainyBackground />
       <Header />
       
-      <main className="flex-1 container mx-auto py-8 px-4 pt-24">
-        <div className="max-w-3xl mx-auto">
+      <main className="flex-1 container mx-auto py-8 px-4 pt-24 relative z-10">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Profile Settings</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-4xl font-bold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+              Profile Settings
+            </h1>
+            <p className="text-muted-foreground text-lg">
               Manage your account settings and preferences.
             </p>
           </div>
 
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="profile" className="gap-2">
-                <User className="h-4 w-4" />
-                Profile
-              </TabsTrigger>
-              <TabsTrigger value="financial" className="gap-2">
-                <DollarSign className="h-4 w-4" />
-                Financial
-              </TabsTrigger>
-              <TabsTrigger value="preferences" className="gap-2">
-                <Palette className="h-4 w-4" />
-                Preferences
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="gap-2">
-                <Bell className="h-4 w-4" />
-                Notifications
-              </TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8">
+            <aside className="md:w-64 flex-shrink-0">
+              <TabsList className="flex md:flex-col h-auto bg-transparent p-0 gap-2 justify-start w-full">
+                <TabsTrigger 
+                  value="profile" 
+                  className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200 rounded-xl"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">Profile</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="financial" 
+                  className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200 rounded-xl"
+                >
+                  <DollarSign className="h-5 w-5" />
+                  <span className="font-medium">Financial</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preferences" 
+                  className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200 rounded-xl"
+                >
+                  <Palette className="h-5 w-5" />
+                  <span className="font-medium">Preferences</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="notifications" 
+                  className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200 rounded-xl"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="font-medium">Notifications</span>
+                </TabsTrigger>
+              </TabsList>
+            </aside>
 
-            <TabsContent value="profile">
+            <div className="flex-1 min-w-0">
+              <TabsContent value="profile" className="mt-0 space-y-6">
               <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <CardTitle>Personal Information</CardTitle>
@@ -206,6 +232,36 @@ export default function ProfilePage() {
                     <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
 
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Age</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="age"
+                          type="number"
+                          className="pl-10"
+                          placeholder="25"
+                          value={formData.age}
+                          onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="city"
+                          className="pl-10"
+                          placeholder="Mumbai"
+                          value={formData.city}
+                          onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
                     <div className="relative">
@@ -235,7 +291,7 @@ export default function ProfilePage() {
               </SpotlightCard>
             </TabsContent>
 
-            <TabsContent value="financial">
+            <TabsContent value="financial" className="mt-0 space-y-6">
               <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <CardTitle>Financial Information</CardTitle>
@@ -363,7 +419,7 @@ export default function ProfilePage() {
               </SpotlightCard>
             </TabsContent>
 
-            <TabsContent value="preferences">
+            <TabsContent value="preferences" className="mt-0 space-y-6">
               <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <CardTitle>Appearance</CardTitle>
@@ -391,7 +447,7 @@ export default function ProfilePage() {
               </SpotlightCard>
             </TabsContent>
 
-            <TabsContent value="notifications">
+            <TabsContent value="notifications" className="mt-0 space-y-6">
               <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <CardTitle>Notification Settings</CardTitle>
@@ -426,6 +482,7 @@ export default function ProfilePage() {
                 </CardContent>
               </SpotlightCard>
             </TabsContent>
+            </div>
           </Tabs>
         </div>
       </main>

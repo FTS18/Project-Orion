@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Play, Stop, Download, Plus, TrendingUp } from 'lucide-react';
+import { Play, Square, Download, Plus, TrendingUp } from 'lucide-react';
 
 interface TestVariant {
   name: string;
@@ -263,7 +263,7 @@ const TestCard: React.FC<TestCardProps> = ({
               onStop();
             }}
           >
-            <Stop className="w-4 h-4 mr-2" />
+            <Square className="w-4 h-4 mr-2" />
             Stop Test
           </Button>
         )}

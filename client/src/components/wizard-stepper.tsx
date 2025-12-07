@@ -11,9 +11,10 @@ interface WizardStepperProps {
   steps: Step[];
   currentStep: number;
   className?: string;
+  onStepClick?: (stepId: number) => void;
 }
 
-export function WizardStepper({ steps, currentStep, className }: WizardStepperProps) {
+export function WizardStepper({ steps, currentStep, className, onStepClick }: WizardStepperProps) {
   return (
     <nav 
       className={cn("w-full", className)}
@@ -37,12 +38,19 @@ export function WizardStepper({ steps, currentStep, className }: WizardStepperPr
               )}
             >
               <div className="flex flex-col items-center gap-1.5">
-                <div
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onStepClick && (isCompleted || isCurrent)) {
+                      onStepClick(step.id);
+                    }
+                  }}
+                  disabled={!isCompleted && !isCurrent}
                   className={cn(
                     "h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300",
-                    isCompleted && "bg-primary text-primary-foreground",
-                    isCurrent && "bg-primary text-primary-foreground ring-4 ring-primary/20",
-                    isUpcoming && "bg-muted text-muted-foreground border-2 border-border"
+                    isCompleted && "bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90",
+                    isCurrent && "bg-primary text-primary-foreground ring-4 ring-primary/20 cursor-default",
+                    isUpcoming && "bg-muted text-muted-foreground border-2 border-border cursor-not-allowed"
                   )}
                   aria-current={isCurrent ? "step" : undefined}
                   data-testid={`step-indicator-${step.id}`}
@@ -52,7 +60,7 @@ export function WizardStepper({ steps, currentStep, className }: WizardStepperPr
                   ) : (
                     <span>{step.id}</span>
                   )}
-                </div>
+                </button>
                 <div className="text-center">
                   <span 
                     className={cn(

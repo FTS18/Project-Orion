@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { InitialLoader } from "@/components/initial-loader";
 import { PageTransition } from "@/components/page-transition";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 import LandingPage from "@/pages/landing";
 import StandardModePage from "@/pages/standard-mode";
@@ -32,6 +33,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 function Router() {
   return (
     <PageTransition>
+      <ScrollToTop />
       <Switch>
         <Route path="/" component={LandingPage} />
         <Route path="/standard" component={StandardModePage} />

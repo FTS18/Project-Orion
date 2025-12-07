@@ -152,6 +152,57 @@ The `AIOrchestrator` manages the conversation flow:
 
 ---
 
+## 📦 Configuration System
+
+Project Orion uses a centralized configuration system for easy customization without code changes.
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `client/src/config/agents.config.ts` | Agent types, colors, icons, capabilities |
+| `client/src/config/loan.config.ts` | Loan products, rates, eligibility rules |
+| `client/src/config/workflow.config.ts` | Workflow steps, conditions, timeouts |
+| `client/src/config/theme.config.ts` | Branding, colors, fonts, animations |
+| `client/src/config/features.config.ts` | Feature flags for toggling functionality |
+| `client/src/config/prompts.config.ts` | AI agent prompts and response templates |
+
+### Usage Examples
+
+```tsx
+// Import from central config
+import { AGENT_CONFIGS, LOAN_PRODUCTS, isFeatureEnabled } from "@/config";
+
+// Get agent config
+const masterAgent = AGENT_CONFIGS.master;
+
+// Check loan eligibility
+const result = checkEligibility("personal", creditScore, age, income);
+
+// Feature flag check
+if (isFeatureEnabled("particlesBackground")) {
+  // Show particles
+}
+```
+
+### Database-Driven Configuration (Supabase)
+
+For production environments, configurations can be stored in Supabase:
+
+```sql
+-- Run the migration
+supabase migration up
+```
+
+Tables created:
+- `loan_products` - Configurable loan products with rates and limits
+- `eligibility_rules` - Dynamic eligibility criteria
+- `document_requirements` - Required documents per product
+- `rejection_reasons` - User-friendly rejection messages
+- `feature_flags` - Runtime feature toggles
+
+---
+
 ## 🚀 Deployment
 
 **Backend**: Render / Railway (Python)
@@ -162,5 +213,6 @@ See `DEPLOYMENT.md` (if available) for detailed steps.
 
 ---
 
-**Last Updated**: December 6, 2025
-**Version**: 2.0.0 (Gemini + Supabase Upgrade)
+**Last Updated**: December 7, 2025
+**Version**: 2.1.0 (Centralized Configuration System)
+

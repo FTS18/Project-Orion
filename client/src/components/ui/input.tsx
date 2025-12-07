@@ -1,5 +1,5 @@
 import * as React from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -8,12 +8,25 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
     const [isFocused, setIsFocused] = React.useState(false)
     
     return (
-      <div className="relative w-full">
+      <div className="relative w-full group">
+        {/* Glow effect behind input */}
+        <AnimatePresence>
+          {isFocused && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 blur-sm pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
+        
         <input
           type={type}
           className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-all duration-200",
-            isFocused && "border-primary shadow-sm",
+            "relative flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-all duration-300",
+            isFocused && "border-violet-500/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
             className
           )}
           ref={ref}
@@ -27,16 +40,17 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           }}
           {...props}
         />
-        {isFocused && (
+        
+        {/* Animated underline */}
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-md">
           <motion.div
-            layoutId="input-focus-indicator"
-            className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-primary rounded-full"
+            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500"
             initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            exit={{ scaleX: 0 }}
-            transition={{ duration: 0.2 }}
+            animate={{ scaleX: isFocused ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{ originX: 0.5 }}
           />
-        )}
+        </div>
       </div>
     )
   }

@@ -151,29 +151,133 @@ class AIOrchestrator:
             }
     
     async def _generate_response(self, conv: ConversationManager, message: str) -> str:
-        """Generate AI response using Ollama"""
+        """Generate AI response using Gemini, with fallback to mock responses"""
         
-        # Prepare system prompt based on current stage
-        system_prompt = LoanAgentPrompts.master_agent(
-            conv.user_profile,
-            conv.messages[-5:]  # Last 5 messages for context
-        )
+        try:
+            # Prepare system prompt based on current stage
+            system_prompt = LoanAgentPrompts.master_agent(
+                conv.user_profile,
+                conv.messages[-5:]  # Last 5 messages for context
+            )
+            
+            # Get chat history
+            chat_history = conv.get_chat_history(last_n=8)
+            
+            # Add system message at the start
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(chat_history)
+            
+            # Generate response from Gemini
+            response = await gemini_service.chat(
+                messages=messages,
+                temperature=0.7,
+                max_tokens=300
+            )
+            
+            return response
+            
+        except Exception as e:
+            conv.add_log("master", "ai_fallback", f"Using mock response: {str(e)}", "warning")
+            # Fallback to mock response if AI fails
+            return self._get_mock_response(conv, message)
+    
+    def _get_mock_response(self, conv: ConversationManager, message: str) -> str:
+        """Generate contextual mock response when AI is unavailable"""
         
-        # Get chat history
-        chat_history = conv.get_chat_history(last_n=8)
+        message_lower = message.lower()
+        user_name = conv.user_profile.get("firstName", conv.user_profile.get("name", "Customer"))
+        if isinstance(user_name, str) and " " in user_name:
+            user_name = user_name.split()[0]  # First name only
         
-        # Add system message at the start
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(chat_history)
-        
-        # Generate response
-        response = await gemini_service.chat(
-            messages=messages,
-            temperature=0.7,
-            max_tokens=300
-        )
-        
-        return response
+        # Greeting/start patterns
+        if any(word in message_lower for word in ["hi", "hello", "hey", "start", "begin"]):
+            return f"""Hello {user_name}! 👋 I'm your AI Loan Assistant.
+
+I can help you with:
+• Personal Loan
+• Home Loan
+• Business Loan
+
+What type of loan are you looking for today?"""
+
+        # Loan type selection
+        if any(word in message_lower for word in ["personal", "home", "business", "education"]):
+            loan_type = "Personal"
+            if "home" in message_lower:
+                loan_type = "Home"
+            elif "business" in message_lower:
+                loan_type = "Business"
+            elif "education" in message_lower:
+                loan_type = "Education"
+            
+            conv.loan_requirements["loan_type"] = loan_type
+            conv.agent_states["sales"].status = "active"
+            conv.agent_states["sales"].last_action = f"Processing {loan_type} loan inquiry"
+            
+            return f"""Great choice, {user_name}! I'll help you with a {loan_type} Loan.
+
+Based on your profile, here's a pre-approved offer:
+💰 **Amount**: Up to ₹5,00,000
+📅 **Tenure**: 12-60 months  
+📊 **Interest Rate**: 10.5% - 12.5% p.a.
+
+Would you like to proceed with this offer? Or tell me the specific amount you're looking for."""
+
+        # Amount related
+        if any(word in message_lower for word in ["amount", "lakh", "lakhs", "₹", "rupee", "rs"]):
+            # Try to extract amount
+            import re
+            amount_match = re.search(r'(\d+)\s*(?:lakh|lakhs|lac)', message_lower)
+            if amount_match:
+                amount = int(amount_match.group(1)) * 100000
+                conv.loan_requirements["loan_amount"] = amount
+            
+            conv.agent_states["sales"].status = "completed"
+            conv.agent_states["verification"].status = "active"
+            
+            return f"""Perfect! I've noted your loan amount preference.
+
+Let me verify your details:
+✅ Name: {user_name}
+✅ Loan Type: {conv.loan_requirements.get('loan_type', 'Personal')} Loan
+✅ Amount: ₹{conv.loan_requirements.get('loan_amount', 300000):,}
+
+I'll now initiate the verification process. Do you confirm these details?"""
+
+        # Yes/confirm patterns
+        if any(word in message_lower for word in ["yes", "confirm", "proceed", "ok", "okay", "sure"]):
+            conv.agent_states["verification"].status = "completed"
+            conv.agent_states["underwriting"].status = "active"
+            
+            return f"""Excellent! ✅ Your details have been verified.
+
+Now running credit assessment...
+• Checking credit score
+• Analyzing financial history
+• Calculating risk profile
+
+This will take just a moment. Your application is progressing well! 📊"""
+
+        # Status/progress patterns
+        if any(word in message_lower for word in ["status", "progress", "update", "how"]):
+            return f"""Here's your application status, {user_name}:
+
+🟢 **Sales**: Complete
+🟢 **Verification**: Complete  
+🟡 **Underwriting**: In Progress
+⚪ **Sanction**: Pending
+
+Your application is being processed. Expected completion: ~2 minutes."""
+
+        # Default response
+        return f"""I understand, {user_name}. Let me help you with that.
+
+You can tell me:
+• The type of loan you need (Personal/Home/Business)
+• The loan amount you're looking for
+• Your preferred tenure
+
+How can I assist you today?"""
     
     async def _extract_requirements(self, conv: ConversationManager, message: str):
         """Extract loan requirements from conversation using AI"""

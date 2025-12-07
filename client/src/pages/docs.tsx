@@ -11,6 +11,12 @@ import {
   Settings,
   HelpCircle
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function DocsPage() {
   return (
@@ -165,38 +171,47 @@ export default function DocsPage() {
               <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
                 <CardHeader>
                   <h2 className="text-lg font-semibold">Frequently Asked Questions</h2>
+                  <CardDescription>Common questions about Project Orion</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">How long does loan approval take?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Average decision time is 2 minutes. The AI agents process your application in parallel for speed.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">What documents do I need?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Salary documents (payslip or bank statement) for verification. Other documents depend on loan purpose.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">Is my data secure?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Yes. We use 256-bit encryption, secure authentication, and comply with data protection regulations.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">Can I edit my application after submission?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      You can modify details up to the final verification step. Contact support for further assistance.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">What if my loan is rejected?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      You'll receive detailed feedback on rejection reasons. You can reapply after addressing the issues.
-                    </p>
-                  </div>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>How long does loan approval take?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        Average decision time is 2 minutes. The AI agents process your application in parallel for speed.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                      <AccordionTrigger>What documents do I need?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        Salary documents (payslip or bank statement) for verification. Other documents depend on loan purpose.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-3">
+                      <AccordionTrigger>Is my data secure?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        Yes. We use 256-bit encryption, secure authentication, and comply with data protection regulations.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-4">
+                      <AccordionTrigger>Can I edit my application after submission?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        You can modify details up to the final verification step. Contact support for further assistance.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-5">
+                      <AccordionTrigger>What if my loan is rejected?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        You'll receive detailed feedback on rejection reasons. You can reapply after addressing the issues.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-6">
+                      <AccordionTrigger>How do I contact support?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        You can reach our support team via the 'Contact' page or email us at support@projectorion.com.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </CardContent>
               </SpotlightCard>
             </TabsContent>

@@ -94,19 +94,19 @@ class GeminiService:
                     except (KeyError, IndexError):
                         with open("backend_error.log", "a") as f:
                             f.write(f"Gemini Parse Error. Data: {json.dumps(data)}\n")
-                        return "I apologize, but I couldn't generate a response."
+                        raise Exception("Failed to parse Gemini response")
                 else:
                     error_text = await response.text()
                     with open("backend_error.log", "a") as f:
                         f.write(f"Gemini API Error: {error_text}\n")
                     print(f"Gemini API Error: {error_text}")
-                    return "I apologize, but I'm having trouble connecting to the AI service."
+                    raise Exception(f"Gemini API Error: {response.status}")
                     
-        except Exception as e:
+        except aiohttp.ClientError as e:
             with open("backend_error.log", "a") as f:
                 f.write(f"Gemini Connection Error: {str(e)}\n")
             print(f"Gemini Connection Error: {str(e)}")
-            return "System error: Unable to reach AI service."
+            raise Exception(f"Connection error: {str(e)}")
 
     async def extract_json(self, prompt: str, text: str) -> Dict[str, Any]:
         """Extract structured JSON data from text"""

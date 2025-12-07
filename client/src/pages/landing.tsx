@@ -2,11 +2,18 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { SimpleWorkflowGraph } from "@/components/workflow-graph";
 import { USE_MOCK_DATA } from "@/lib/queryClient";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { 
   ArrowRight, 
   Bot, 
@@ -40,6 +47,37 @@ const staggerContainer = {
 export default function LandingPage() {
   const [, navigate] = useLocation();
   const [hoveredMode, setHoveredMode] = useState<"standard" | "agentic" | null>(null);
+  
+  // Mouse Move Effect
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll();
+  const springConfig = { stiffness: 100, damping: 30, mass: 0.2 };
+  
+  const mouseX = useSpring(0, springConfig);
+  const mouseY = useSpring(0, springConfig);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      const x = clientX / innerWidth;
+      const y = clientY / innerHeight;
+      mouseX.set(x);
+      mouseY.set(y);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  const x1 = useTransform(mouseX, [0, 1], [-50, 50]);
+  const y1 = useTransform(mouseY, [0, 1], [-50, 50]);
+  const x2 = useTransform(mouseX, [0, 1], [30, -30]);
+  const y2 = useTransform(mouseY, [0, 1], [30, -30]);
+  const x3 = useTransform(mouseX, [0, 1], [-20, 20]);
+  const y3 = useTransform(mouseY, [0, 1], [-20, 20]);
+  const x4 = useTransform(mouseX, [0, 1], [40, -40]);
+  const y4 = useTransform(mouseY, [0, 1], [40, -40]);
 
   const features = [
     {
@@ -113,6 +151,25 @@ export default function LandingPage() {
     { category: "Database", tools: "Supabase Auth & DB" }
   ];
 
+  const faqs = [
+    {
+      question: "How does the AI agent actually work?",
+      answer: "Our AI agents are built on advanced Large Language Models (LLMs) that understand natural language. They act as your personal banker, guiding you through the application, answering your questions, and even negotiating terms in real-time—just like a human would, but instantly."
+    },
+    {
+      question: "Is my financial data secure?",
+      answer: "Absolutely. We use bank-grade 256-bit encryption for all data transmission and storage. We are fully compliant with GDPR and financial regulations. Your sensitive data is never used to train our public models without your explicit consent."
+    },
+    {
+      question: "How fast is the approval process?",
+      answer: "Lightning fast. Our real-time underwriting engine processes thousands of data points in seconds. Most users receive a decision in under 2 minutes after completing their application, compared to days with traditional banks."
+    },
+    {
+      question: "Can I switch between Standard and Agentic modes?",
+      answer: "Yes! We believe in flexibility. You can start chatting with the AI and, if you prefer, switch to the standard form view at any time. Your progress is automatically saved and synced between both modes."
+    }
+  ];
+
   return (
     <div className="min-h-screen font-sans selection:bg-primary/20 relative">
       <Header />
@@ -131,48 +188,52 @@ export default function LandingPage() {
       )}
       
       {/* Global Animated Background */}
-      {/* Global Animated Background */}
+      {/* Global Animated Background - Optimized */}
+      {/* Global Animated Background - Optimized for Performance */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
+        {/* 
+           PERFORMANCE NOTE: 
+           We replaced the expensive `blur-[100px]` filter with `radial-gradient`.
+           CSS Gradients are much cheaper for the GPU to render than real-time gaussian blurs.
+           We also use `will-change-transform` to hint the browser to promote these to layers.
+        */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
+        
         <motion.div 
+          style={{ x: x1, y: y1 }}
           animate={{ 
             scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, 100, 0],
-            y: [0, 50, 0]
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[120px]"
+          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] rounded-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-primary/5 to-transparent will-change-transform transform-gpu"
         />
         <motion.div 
+          style={{ x: x2, y: y2 }}
           animate={{ 
             scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, -50, 0],
-            y: [0, 100, 0]
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-purple-500/10 rounded-full blur-[120px]"
+          className="absolute top-[20%] -left-[20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-purple-500/5 to-transparent will-change-transform transform-gpu"
         />
         <motion.div 
+          style={{ x: x3, y: y3 }}
           animate={{ 
             scale: [1, 1.1, 1],
-            opacity: [0.1, 0.3, 0.1],
-            x: [0, 60, 0],
-            y: [0, -60, 0]
+            opacity: [0.2, 0.4, 0.2],
           }}
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute bottom-[10%] right-[10%] w-[60vw] h-[60vw] bg-blue-500/10 rounded-full blur-[120px]"
+          className="absolute bottom-[10%] right-[10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/20 via-blue-500/5 to-transparent will-change-transform transform-gpu"
         />
         <motion.div 
+          style={{ x: x4, y: y4 }}
           animate={{ 
             scale: [1, 1.4, 1],
-            opacity: [0.1, 0.2, 0.1],
-            x: [0, -40, 0],
-            y: [0, -40, 0]
+            opacity: [0.1, 0.3, 0.1],
           }}
           transition={{ duration: 28, repeat: Infinity, ease: "easeInOut", delay: 6 }}
-          className="absolute -bottom-[10%] -left-[10%] w-[60vw] h-[60vw] bg-emerald-500/10 rounded-full blur-[120px]"
+          className="absolute -bottom-[10%] -left-[10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-emerald-500/5 to-transparent will-change-transform transform-gpu"
         />
       </div>
 
@@ -239,15 +300,16 @@ export default function LandingPage() {
                   variants={fadeInUp}
                   className="flex flex-col sm:flex-row gap-5"
                 >
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button 
                       size="lg"
                       onClick={() => navigate("/agentic")}
-                      className="h-12 px-8 text-base gap-2 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all w-full sm:w-auto"
+                      className="relative h-12 px-8 text-base gap-2 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all w-full sm:w-auto overflow-hidden group"
                     >
-                      <Bot className="h-5 w-5" />
-                      Try Agentic Mode
-                      <ArrowRight className="h-4 w-4" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                      <Bot className="h-5 w-5 relative z-10" />
+                      <span className="relative z-10">Try Agentic Mode</span>
+                      <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -274,7 +336,7 @@ export default function LandingPage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-purple-500/5 rounded-3xl transform rotate-3 scale-105" />
                 <SpotlightCard 
-                  className="relative p-6 bg-white/40 dark:bg-black/40 backdrop-blur-xl border-black/5 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden" 
+                  className="relative p-6 bg-white/40 dark:bg-black/40 backdrop-blur-md border-black/5 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden" 
                   spotlightColor="rgba(var(--primary), 0.15)"
                   hoverScale
                 >
@@ -560,40 +622,99 @@ export default function LandingPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    whileHover={{ y: -10 }}
-                    className="relative group w-full max-w-[240px]"
+                    whileHover={{ y: -8 }}
+                    className="relative group w-full max-w-[220px]"
                   >
-                    {/* Premium Glass Card */}
-                    <div className="relative h-80 rounded-3xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md p-6 flex flex-col items-center text-center overflow-hidden transition-all duration-500 group-hover:border-primary/30 group-hover:bg-white/60 dark:group-hover:bg-black/60 group-hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)]">
+                    {/* Tech Profile Card */}
+                    <div className="relative h-[300px] rounded-2xl border border-black/5 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-sm p-5 flex flex-col items-center text-center overflow-hidden transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-xl group-hover:shadow-primary/10">
                        
-                       {/* Subtle Gradient Overlay */}
-                       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                       {/* Grid Pattern Overlay */}
+                       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07]" 
+                            style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '16px 16px' }} 
+                       />
+                       
+                       {/* Top Accent Line */}
+                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                        {/* Avatar */}
-                       <div className="relative mb-6 mt-2">
-                         <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 group-hover:scale-105 transition-transform duration-500">
-                           <div className="w-full h-full rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center overflow-hidden">
-                              <span className="text-3xl font-bold text-white/90">{member.name.charAt(0)}</span>
+                       <div className="relative mb-5 mt-4 group-hover:scale-105 transition-transform duration-300">
+                         <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-black/5 to-black/10 dark:from-white/10 dark:to-white/5 p-1 shadow-inner">
+                           <div className="w-full h-full rounded-xl bg-background flex items-center justify-center overflow-hidden border border-black/5 dark:border-white/5 relative">
+                              <span className="text-3xl font-bold text-primary/80">{member.name.charAt(0)}</span>
+                              
+                              {/* Corner Accents */}
+                              <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-primary/30 rounded-tl-md" />
+                              <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-primary/30 rounded-br-md" />
                            </div>
-                         </div>
-                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-md">
-                            <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Dev</span>
                          </div>
                        </div>
 
-                       <div className="relative z-10 w-full">
-                          <h4 className="font-bold text-foreground text-lg mb-1 group-hover:text-primary transition-colors">{member.name}</h4>
-                          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">{member.org}</p>
+                       <div className="relative z-10 w-full flex flex-col flex-grow">
+                          <h4 className="font-bold text-foreground text-base mb-1 group-hover:text-primary transition-colors">{member.name}</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-4 font-medium">{member.org}</p>
                           
-                          <div className="h-px w-12 bg-white/10 mx-auto mb-4 group-hover:w-24 group-hover:bg-primary/50 transition-all duration-500" />
-                          
-                          <p className="text-xs text-muted-foreground/80 leading-relaxed">{member.role}</p>
+                          <div className="mt-auto w-full pt-4 border-t border-black/5 dark:border-white/5">
+                            <p className="text-xs font-medium text-foreground/80 leading-relaxed">{member.role}</p>
+                          </div>
                        </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
            </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-24 relative overflow-hidden">
+          <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Everything you need to know about the future of banking.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <Accordion type="single" collapsible className="w-full space-y-4 mb-8">
+                {faqs.map((faq, index) => (
+                  <AccordionItem 
+                    key={index} 
+                    value={`item-${index}`}
+                    className="border border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md rounded-2xl px-6 overflow-hidden"
+                  >
+                    <AccordionTrigger className="text-lg font-medium hover:no-underline py-6">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-base pb-6 leading-relaxed">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+              
+              <div className="flex justify-center">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => navigate("/docs?tab=faq")}
+                  className="rounded-full px-8 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                >
+                  View all FAQs
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          </div>
         </section>
 
         {/* CTA Section */}
@@ -621,11 +742,12 @@ export default function LandingPage() {
               <Button 
                 size="lg"
                 onClick={() => navigate("/agentic")}
-                className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all"
+                className="relative h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all overflow-hidden group"
               >
-                <Sparkles className="h-5 w-5 mr-2" />
-                Start Agentic Chat
-                <ArrowRight className="h-5 w-5 ml-2" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                <Sparkles className="h-5 w-5 mr-2 relative z-10" />
+                <span className="relative z-10">Start Agentic Chat</span>
+                <ArrowRight className="h-5 w-5 ml-2 relative z-10 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>
           </motion.div>

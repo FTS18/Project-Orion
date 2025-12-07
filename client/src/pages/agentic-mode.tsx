@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/header";
 import { ChatInterface } from "@/components/chat-interface";
 import { AgentPanelGrid } from "@/components/enhanced-agent-panel";
-import { WorkflowGraph } from "@/components/workflow-graph";
+import { WorkflowGraph, WorkflowGraphHorizontal } from "@/components/workflow-graph";
 import { InlineLogViewer } from "@/components/log-drawer";
 import { SanctionLetterModal } from "@/components/sanction-letter-modal";
 import { CustomDataEntry, type CustomerData, type LoanDetails } from "@/components/custom-data-entry";
@@ -47,6 +47,10 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { getCurrentUser, createWelcomeMessage, type UserProfile } from "@/lib/agent-user-context";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { ParticlesBackground } from "@/components/ui/particles-background";
+import { SuccessConfetti } from "@/components/ui/confetti";
+import { isFeatureEnabled } from "@/config/features.config";
+import { getAgentWorkflowOrder } from "@/config/agents.config";
 
 type WorkflowMode = "auto" | "step";
 type WorkflowState = "idle" | "running" | "paused" | "completed" | "error";
@@ -59,13 +63,12 @@ interface AgentStateData {
   progress?: number;
 }
 
-const INITIAL_AGENTS: AgentStateData[] = [
-  { agentType: "master", status: "idle", messages: [] },
-  { agentType: "sales", status: "idle", messages: [] },
-  { agentType: "verification", status: "idle", messages: [] },
-  { agentType: "underwriting", status: "idle", messages: [] },
-  { agentType: "sanction", status: "idle", messages: [] },
-];
+// Generate initial agents from config
+const INITIAL_AGENTS: AgentStateData[] = getAgentWorkflowOrder().map(agentType => ({
+  agentType,
+  status: "idle" as AgentStatus,
+  messages: [],
+}));
 
 // Welcome message will be created dynamically based on user login status
 
@@ -589,20 +592,45 @@ export default function AgenticModePage() {
     if (lastMsg.role === "agent" || lastMsg.role === "system") {
         const text = lastMsg.content.toLowerCase();
         
-        // Loan Types
-        if (text.includes("type of loan") || text.includes("looking for")) return ["Personal Loan", "Home Loan", "Business Loan"];
+        // Loan Types - Check multiple patterns
+        if (text.includes("type of loan") || text.includes("looking for today") || text.includes("what type")) {
+          return ["Personal Loan", "Home Loan", "Business Loan"];
+        }
         
-        // Amounts
-        if (text.includes("amount") || text.includes("how much")) return ["₹50,000", "₹1,00,000", "₹5,00,000", "₹10,00,000"];
+        // After loan type selected - ask for amount
+        if (text.includes("pre-approved offer") || text.includes("specific amount") || text.includes("how much")) {
+          return ["₹1,00,000", "₹3,00,000", "₹5,00,000", "₹10,00,000"];
+        }
+        
+        // Confirmation dialogs
+        if (text.includes("confirm these details") || text.includes("do you confirm") || text.includes("would you like to proceed")) {
+          return ["Yes, proceed", "No, change details"];
+        }
+        
+        // Verification/underwriting stage
+        if (text.includes("credit assessment") || text.includes("verifying") || text.includes("checking")) {
+          return ["Check Status", "Continue"];
+        }
+        
+        // Application status
+        if (text.includes("status") || text.includes("in progress")) {
+          return ["View Details", "Cancel Application"];
+        }
         
         // Tenure
-        if (text.includes("tenure") || text.includes("period") || text.includes("how long")) return ["12 Months", "24 Months", "36 Months", "60 Months"];
-        
-        // Confirmation
-        if (text.includes("proceed") || text.includes("happy to") || text.includes("confirm")) return ["Yes, proceed", "No, change details"];
+        if (text.includes("tenure") || text.includes("period") || text.includes("how long")) {
+          return ["12 Months", "24 Months", "36 Months", "60 Months"];
+        }
         
         // Purpose
-        if (text.includes("purpose")) return ["Education", "Medical", "Travel", "Renovation", "Business Expansion", "Working Capital"];
+        if (text.includes("purpose")) {
+          return ["Education", "Medical", "Home Renovation", "Business"];
+        }
+
+        // Completion
+        if (text.includes("approved") || text.includes("sanction")) {
+          return ["View Sanction Letter", "Start New Application"];
+        }
 
         // Business Specific
         if (text.includes("nature") || text.includes("industry")) return ["Retail", "Manufacturing", "Services", "Trading"];
@@ -613,14 +641,25 @@ export default function AgenticModePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Floating Particles Background */}
+      <ParticlesBackground 
+        className="opacity-40" 
+        particleCount={35}
+        speed={0.3}
+        connectDistance={100}
+      />
+      
+      {/* Success Confetti for Loan Approval */}
+      <SuccessConfetti show={underwritingResult?.decision === "APPROVE" && workflowState === "completed"} />
+      
       <Header 
         mode="agentic" 
         onModeChange={(mode) => navigate(`/${mode}`)}
         showModeToggle 
       />
 
-      <main className="pt-16 h-screen flex flex-col">
+      <main className="pt-16 h-screen flex flex-col relative z-10">
         {/* Mobile Tab Switcher */}
         <div className="md:hidden flex border-b bg-background">
           <button 
@@ -734,7 +773,6 @@ export default function AgenticModePage() {
               defaultSize={40} 
               minSize={20} 
               collapsible={true} 
-              minMax={15} 
               maxSize={60} 
               className={cn(
                 "bg-muted/5",
@@ -742,11 +780,11 @@ export default function AgenticModePage() {
                 mobileView === "agents" ? "flex" : "hidden"
               )}
             >
-              <div className="h-full overflow-hidden flex flex-col border-l">
+              <div className="h-full overflow-hidden flex flex-col border-l min-h-0">
                 <Tabs 
                   value={activeTab} 
                   onValueChange={setActiveTab}
-                  className="flex-1 flex flex-col"
+                  className="flex-1 flex flex-col min-h-0 overflow-hidden"
                 >
                   <div className="border-b px-4 bg-background">
                     <TabsList className="h-12 w-full justify-start bg-transparent p-0">
@@ -769,7 +807,7 @@ export default function AgenticModePage() {
                     </TabsList>
                   </div>
 
-                  <TabsContent value="agents" className="flex-1 overflow-auto m-0 p-4">
+                  <TabsContent value="agents" className="data-[state=inactive]:hidden flex-1 flex flex-col m-0 p-4 overflow-y-auto">
                     {isLoadingUser ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[1, 2, 3, 4, 5].map((i) => (
@@ -777,7 +815,7 @@ export default function AgenticModePage() {
                         ))}
                       </div>
                     ) : (
-                      <>
+                      <div className="flex flex-col flex-1">
                         {userProfile && (
                           <div className="mb-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
                             <p className="text-sm text-muted-foreground">
@@ -786,7 +824,7 @@ export default function AgenticModePage() {
                           </div>
                         )}
                         <AgentPanelGrid agents={agents} />
-                      </>
+                      </div>
                     )}
                     
                     {underwritingResult && (
@@ -821,17 +859,30 @@ export default function AgenticModePage() {
                     )}
                   </TabsContent>
 
-                  <TabsContent value="workflow" className="flex-1 overflow-auto m-0 p-4">
-                    <div className="space-y-4">
+                  <TabsContent value="workflow" className="data-[state=inactive]:hidden flex-1 flex flex-col m-0 p-4 min-h-0 overflow-auto">
+                    <div className="flex flex-col gap-6">
                       <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.05)">
                         <h3 className="font-semibold mb-4">Agent Workflow</h3>
-                        <WorkflowGraph 
-                          nodes={workflowNodes}
-                          activeAgent={activeAgent}
-                        />
+                        {/* Desktop: Horizontal Flowchart */}
+                        <div className="hidden md:block">
+                          <WorkflowGraphHorizontal 
+                            nodes={workflowNodes}
+                            activeAgent={activeAgent}
+                          />
+                        </div>
+                        {/* Mobile: Vertical Flowchart */}
+                        <div className="md:hidden">
+                          <WorkflowGraph 
+                            nodes={workflowNodes}
+                            activeAgent={activeAgent}
+                          />
+                        </div>
                       </SpotlightCard>
 
-                      <InlineLogViewer logs={logs} maxHeight="300px" />
+                      {/* Logs Section - Always visible */}
+                      <div className="min-h-[200px] max-h-[400px]">
+                        <InlineLogViewer logs={logs} className="h-full" />
+                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>

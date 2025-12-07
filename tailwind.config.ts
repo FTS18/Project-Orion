@@ -146,6 +146,10 @@ export default {
           "0%": { strokeDashoffset: "100" },
           "100%": { strokeDashoffset: "0" },
         },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -161,6 +165,7 @@ export default {
         "spin-slow": "spin-slow 3s linear infinite",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "flow-path": "flow-path 1.5s ease-in-out forwards",
+        "shimmer": "shimmer 2s infinite",
       },
     },
   },
