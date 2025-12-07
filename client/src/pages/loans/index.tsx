@@ -1,21 +1,25 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, Search, Filter, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import { MOCK_LOANS, fetchLoans, type LoanProduct } from "@/data/mock-loans";
+import { MOCK_LOANS, fetchLoans, searchLoans, type LoanProduct } from "@/data/mock-loans";
 import { ParticlesBackground } from "@/components/ui/particles-background";
 import { isFeatureEnabled } from "@/config/features.config";
+import { useDebounce } from "@/hooks/use-performance";
+import { useTheme } from "@/lib/theme-provider";
 
 export default function LoanMarketplace() {
   const [, navigate] = useLocation();
+  const { resolvedTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [bankFilter, setBankFilter] = useState("all");
@@ -53,23 +57,42 @@ export default function LoanMarketplace() {
     loadData(1, true);
   }, []);
 
-  // Extract unique banks and categories for filters
+  // Extract unique banks and categories for filters - computed once
   const banks = useMemo(() => Array.from(new Set(MOCK_LOANS.map(l => l.bankName))).sort(), []);
   const categories = useMemo(() => Array.from(new Set(MOCK_LOANS.map(l => l.category))).sort(), []);
 
-  // Filter loans
+  // Debounced search query - reduces re-renders on typing (150ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 150);
+
+  // Optimized filtering using debounced search and Trie index
   const filteredLoans = useMemo(() => {
-    return loans.filter(loan => {
-      const matchesSearch = 
-        loan.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        loan.bankName.toLowerCase().includes(searchQuery.toLowerCase());
+    // Use Trie-based search if we have a search query - O(m) where m is query length
+    let searchResults = loans;
+    
+    if (debouncedSearchQuery.length >= 2) {
+      // Use the optimized Trie search
+      const trieResults = searchLoans(debouncedSearchQuery, 50);
       
+      // If Trie found results, use those, otherwise fall back to includes
+      if (trieResults.length > 0) {
+        const trieIds = new Set(trieResults.map(r => r.id));
+        searchResults = loans.filter(loan => trieIds.has(loan.id));
+      } else {
+        // Fallback to includes for partial matches
+        searchResults = loans.filter(loan =>
+          loan.productName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          loan.bankName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+        );
+      }
+    }
+    
+    // Apply category and bank filters - O(n) but on smaller filtered set
+    return searchResults.filter(loan => {
       const matchesCategory = categoryFilter === "all" || loan.category === categoryFilter;
       const matchesBank = bankFilter === "all" || loan.bankName === bankFilter;
-
-      return matchesSearch && matchesCategory && matchesBank;
+      return matchesCategory && matchesBank;
     });
-  }, [loans, searchQuery, categoryFilter, bankFilter]);
+  }, [loans, debouncedSearchQuery, categoryFilter, bankFilter]);
 
 
   // Load more on scroll
@@ -212,7 +235,13 @@ export default function LoanMarketplace() {
                   transition={{ delay: 0.05 }}
                   layout
                 >
-                  <Card className="h-full flex flex-col hover:border-primary/50 transition-all duration-300 group hover:shadow-lg hover:-translate-y-1 bg-card/50 backdrop-blur-sm">
+                  <SpotlightCard 
+                    className="h-full flex flex-col hover:border-primary/50 transition-all duration-300 group hover:shadow-lg hover:-translate-y-1 bg-card/50 backdrop-blur-sm"
+                    spotlightColor={resolvedTheme === "dark" 
+                      ? "rgba(30, 64, 175, 0.15)" // Darker Blue for Dark mode
+                      : "rgba(52, 211, 153, 0.05)" // Lighter Green for Light mode
+                    }
+                  >
                     <CardHeader>
                       <div className="flex justify-between items-start mb-4">
                         <div className="h-12 w-12 rounded-xl bg-white p-2 flex items-center justify-center shadow-sm border">
@@ -285,7 +314,7 @@ export default function LoanMarketplace() {
                         Apply via AI Agent <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </CardFooter>
-                  </Card>
+                  </SpotlightCard>
                 </motion.div>
               ))}
 

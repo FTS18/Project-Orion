@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { rafScheduler } from "@/lib/performance-utils";
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   borderGlow?: boolean;
 }
 
-export function SpotlightCard({ 
+export const SpotlightCard = memo(function SpotlightCard({ 
   children, 
   className, 
   spotlightColor = "rgba(255, 255, 255, 0.15)",
@@ -23,24 +24,33 @@ export function SpotlightCard({
   const [opacity, setOpacity] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Optimized mouse move handler using RAF scheduler
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!divRef.current) return;
 
+    // Capture values needed for calculation to avoid closure staleness issues in RAF
+    const clientX = e.clientX;
+    const clientY = e.clientY;
     const rect = divRef.current.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
+    
+    rafScheduler.schedule(() => {
+      setPosition({ x: clientX - rect.left, y: clientY - rect.top });
+    });
+  }, []);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     setOpacity(1);
     setIsHovered(true);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setOpacity(0);
     setIsHovered(false);
-  };
+  }, []);
 
-  const { onAnimationStart, onAnimationEnd, onDrag, onDragStart, onDragEnd, ...motionSafeProps } = props;
+  // Filter out Framer Motion specific props if necessary or known non-DOM props
+  const { onAnimationStart, onAnimationEnd, onDrag, onDragStart, onDragEnd, ...motionSafeProps } = props as any; // Cast to any to avoid TS issues with unknown props
+
   
   return (
     <motion.div
@@ -100,4 +110,4 @@ export function SpotlightCard({
       <div className="relative h-full">{children}</div>
     </motion.div>
   );
-}
+});

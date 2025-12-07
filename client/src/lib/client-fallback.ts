@@ -4,6 +4,23 @@
  * This allows the app to work in demo mode even without backend
  */
 
+import { LRUCache, memoizeWithTTL } from '@/lib/performance-utils';
+
+// Cache for health check status - avoids repeated network calls
+const healthCheckCache = new LRUCache<string, { healthy: boolean; timestamp: number }>(5);
+
+// Memoized EMI calculation - O(1) for repeated calculations
+export const calculateEMI = memoizeWithTTL(
+  (principal: number, rate: number, tenure: number): number => {
+    const monthlyRate = rate / 12 / 100;
+    return Math.round(
+      (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / 
+      (Math.pow(1 + monthlyRate, tenure) - 1)
+    );
+  },
+  60000 // Cache for 1 minute
+);
+
 // Demo Customers - same as backend
 export const DEMO_CUSTOMERS = [
   {
@@ -460,15 +477,28 @@ Project Orion Financial Services
 `;
 }
 
-// Check if backend is available
+// Check if backend is available - with caching to avoid repeated calls
 export async function checkBackendHealth(): Promise<boolean> {
+  const cacheKey = 'backend-health';
+  const cached = healthCheckCache.get(cacheKey);
+  const now = Date.now();
+  
+  // Return cached result if less than 10 seconds old
+  if (cached && (now - cached.timestamp) < 10000) {
+    return cached.healthy;
+  }
+  
   try {
     const response = await fetch('/api/health', { 
       method: 'GET',
       signal: AbortSignal.timeout(3000) // 3 second timeout
     });
-    return response.ok;
+    const healthy = response.ok;
+    healthCheckCache.put(cacheKey, { healthy, timestamp: now });
+    return healthy;
   } catch {
+    healthCheckCache.put(cacheKey, { healthy: false, timestamp: now });
     return false;
   }
 }
+

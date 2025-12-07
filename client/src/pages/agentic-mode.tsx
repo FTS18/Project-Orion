@@ -160,9 +160,12 @@ export default function AgenticModePage() {
         setMessages([welcomeMsg]);
         
         // If user is logged in OR has selected a loan, skip data entry form
+        // DISABLED: Always show demo selector as per user request
+        /*
         if (user || selectedLoan) {
           setShowDataEntry(false);
         }
+        */
       } catch (error) {
         console.error('Error loading user:', error);
         // Still show welcome message for non-logged-in users
@@ -817,92 +820,114 @@ Thank you for choosing Project Orion!
   // Show data entry modal if no custom data selected yet
   if (showDataEntry) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 font-sans">
         <Header mode="agentic" onModeChange={(mode) => navigate(`/${mode}`)} showModeToggle />
-        <main className="pt-16 min-h-screen flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl">
-            <div className="mb-8 text-center">
-              <h1 className="text-4xl font-bold mb-2">Agentic AI Loan Assistant</h1>
-              <p className="text-muted-foreground text-lg">
-                Choose how you'd like to start - quick demo with sample data or enter your details
-              </p>
+        <main className="pt-20 min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
+           {/* Background decoration */}
+           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+              <div className="absolute top-[-20%] left-[-10%] w-[50vh] h-[50vh] rounded-full bg-blue-500/10 blur-[120px]" />
+              <div className="absolute bottom-[-20%] right-[-10%] w-[50vh] h-[50vh] rounded-full bg-emerald-500/10 blur-[120px]" />
+           </div>
+
+          <div className="w-full max-w-4xl z-10 space-y-8 animate-fade-in-up">
+            <div className="text-center space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-sm font-medium shadow-sm backdrop-blur-sm">
+                 <Bot className="w-4 h-4" />
+                 <span>AI-Powered Prioritization Engine</span>
+              </div>
+              
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white">
+                    Agentic Loan Assistant
+                  </span>
+                </h1>
+                <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                  Select a persona below to watch our autonomous AI agents process loan applications, verifying documents and underwriting risk in real-time.
+                </p>
+              </div>
             </div>
             
             {/* Quick Start: Demo Customer Selector */}
             {effectiveCustomers && effectiveCustomers.length > 0 && (
-              <SpotlightCard className="mb-6 p-6" spotlightColor="rgba(var(--primary), 0.05)">
-                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  Quick Demo Start
-                </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Select a customer profile to see different loan scenarios in action
-                </p>
-                <DemoCustomerSelector
-                  customers={effectiveCustomers}
-                  selectedCustomerId={currentCustomer?.customerId}
-                  onSelectCustomer={(customer) => {
-                    setCurrentCustomer(customer);
-                    setCustomCustomerData({
-                      customerId: customer.customerId,
-                      name: customer.name,
-                      age: customer.age,
-                      city: customer.city,
-                      phone: customer.phone,
-                      email: customer.email,
-                      employmentType: customer.employmentType,
-                      monthlyNetSalary: customer.monthlyNetSalary,
-                      monthlyIncome: customer.monthlyNetSalary,
-                    });
-                    setShowDataEntry(false);
+              <SpotlightCard 
+                className="p-8 md:p-10 border-emerald-500/20 dark:border-emerald-500/30 shadow-2xl shadow-emerald-500/5 bg-white/70 dark:bg-black/40 backdrop-blur-xl" 
+                spotlightColor="rgba(16, 185, 129, 0.1)" // Emerald spotlight
+              >
+                <div className="grid md:grid-cols-5 gap-8">
+                  {/* Left Side: Text */}
+                  <div className="md:col-span-2 space-y-4 border-b md:border-b-0 md:border-r border-emerald-100 dark:border-emerald-900/50 pb-6 md:pb-0 md:pr-6">
+                    <h2 className="text-2xl font-semibold flex items-center gap-3 text-slate-900 dark:text-slate-100">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 text-emerald-600 border border-emerald-200 dark:border-emerald-800">
+                        <Users className="h-6 w-6" />
+                      </div>
+                      Select Profile
+                    </h2>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Choose a customer profile to simulate different underwriting outcomes. Observe how the agents handle approvals, rejections, and incomplete data.
+                    </p>
                     
-                    // Create welcome message with customer data
-                    const welcomeMsg: AgentMessage = {
-                      id: "welcome-demo",
-                      agentType: "master",
-                      role: "agent",
-                      content: `Hello ${customer.name}! 👋 Welcome to Project Orion.\n\nI'm your AI Loan Assistant powered by **LangGraph** multi-agent orchestration.\n\nBased on your profile:\n• **Credit Score**: ${customer.creditScore}/900\n• **Pre-approved Limit**: ₹${customer.preApprovedLimit.toLocaleString('en-IN')}\n\nWhat type of loan are you looking for today? (Personal / Home / Business)`,
-                      timestamp: new Date().toISOString(),
-                    };
-                    setMessages([welcomeMsg]);
-                    addLog("master", "Demo Profile Loaded", `${customer.name} (Credit: ${customer.creditScore})`, "success");
-                    setShowKYCDocs(true);
-                  }}
-                />
+                    <div className="flex gap-2 flex-wrap pt-2">
+                      <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50 dark:bg-green-950/30 dark:border-green-800 dark:text-green-400">Instant Approval</Badge>
+                      <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50 dark:bg-red-950/30 dark:border-red-800 dark:text-red-400">Rejection</Badge>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Selector */}
+                  <div className="md:col-span-3 flex flex-col justify-center">
+                    <DemoCustomerSelector
+                      customers={effectiveCustomers}
+                      selectedCustomerId={currentCustomer?.customerId}
+                      className="w-full"
+                      onSelectCustomer={(customer) => {
+                        setCurrentCustomer(customer);
+                        setCustomCustomerData({
+                          customerId: customer.customerId,
+                          name: customer.name,
+                          age: customer.age,
+                          city: customer.city,
+                          phone: customer.phone,
+                          email: customer.email,
+                          employmentType: customer.employmentType,
+                          monthlyNetSalary: customer.monthlyNetSalary,
+                          monthlyIncome: customer.monthlyNetSalary,
+                        });
+                        setShowDataEntry(false);
+                        
+                        // Create welcome message with customer data
+                        const welcomeMsg: AgentMessage = {
+                          id: "welcome-demo",
+                          agentType: "master",
+                          role: "agent",
+                          content: `Hello ${customer.name}! 👋 Welcome to Project Orion.\n\nI'm your AI Loan Assistant powered by **LangGraph** multi-agent orchestration.\n\nBased on your profile:\n• **Credit Score**: ${customer.creditScore}/900\n• **Pre-approved Limit**: ₹${customer.preApprovedLimit.toLocaleString('en-IN')}\n\nWhat type of loan are you looking for today? (Personal / Home / Business)`,
+                          timestamp: new Date().toISOString(),
+                        };
+                        setMessages([welcomeMsg]);
+                        addLog("master", "Profile Loaded", `${customer.name} (Score: ${customer.creditScore})`, "success");
+                        setShowKYCDocs(true);
+                      }}
+                    />
+                  </div>
+                </div>
               </SpotlightCard>
             )}
-            
-            {/* Divider */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-sm text-muted-foreground">OR</span>
-              <div className="flex-1 h-px bg-border" />
+
+            {/* Features Footer */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm font-medium text-slate-600 dark:text-slate-400 mt-12">
+               <div className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/20 hover:bg-white/60 transition-colors">
+                 <div className="p-3 rounded-full bg-blue-500/10 text-blue-600 group-hover:scale-110 transition-transform"><Users className="w-5 h-5"/></div>
+                 <span>Instant Profile Loading</span>
+               </div>
+               <div className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/20 hover:bg-white/60 transition-colors">
+                 <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-600 group-hover:scale-110 transition-transform"><CheckCircle className="w-5 h-5"/></div>
+                 <span>Real-time Decisions</span>
+               </div>
+               <div className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/20 hover:bg-white/60 transition-colors">
+                 <div className="p-3 rounded-full bg-purple-500/10 text-purple-600 group-hover:scale-110 transition-transform"><Bot className="w-5 h-5"/></div>
+                 <span>Multi-Agent Workflow</span>
+               </div>
             </div>
             
-            {/* Custom Data Entry */}
-            <CustomDataEntry
-              onCustomerSelected={(data) => {
-                setCustomCustomerData(data);
-              }}
-              onLoanDetailsEntered={(data) => {
-                setCustomLoanData(data);
-              }}
-              onClose={() => {
-                setShowDataEntry(false);
-                // Update welcome message with custom data
-                if (customCustomerData && customLoanData) {
-                  const newWelcome: AgentMessage = {
-                    id: "welcome-updated",
-                    agentType: "master",
-                    role: "agent",
-                    content: `Great! I've got your details, ${customCustomerData.name}. Now let me coordinate with my team of specialized agents to process your loan application.\n\nLoan Amount: ₹${customLoanData.loanAmount.toLocaleString('en-IN')}\nTenure: ${customLoanData.tenure} months\nRate: ${customLoanData.rate}% p.a.\n\nLet me start by verifying your information with our sales team.`,
-                    timestamp: new Date().toISOString(),
-                  };
-                  setMessages([newWelcome]);
-                  addLog("master", "Application Initiated", `Customer: ${customCustomerData.name}, Loan: ₹${customLoanData.loanAmount}`, "success");
-                }
-              }}
-            />
           </div>
         </main>
       </div>
@@ -1167,7 +1192,7 @@ Thank you for choosing Project Orion!
                             </p>
                           </div>
                         )}
-                        <AgentPanelGrid agents={agents} />
+                        <AgentPanelGrid agents={agents} activeAgentType={activeAgent} />
                       </div>
                     )}
                     

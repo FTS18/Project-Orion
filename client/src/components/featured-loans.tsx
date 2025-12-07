@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ArrowRight, Check, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { useTheme } from "@/lib/theme-provider";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { MOCK_LOANS, shuffleLoans, type LoanProduct } from "@/data/mock-loans";
@@ -12,9 +14,10 @@ export type { LoanProduct };
 
 export function FeaturedLoans() {
   const [, navigate] = useLocation();
+  const { resolvedTheme } = useTheme();
   
   // Use client-side mock data - no backend needed!
-  // Pick 3 random distinct categories for maximum variety
+  // ... (rest of useMemo logic unchanged)
   const featuredLoans = useMemo(() => {
     // Get all unique categories
     const categories = Array.from(new Set(MOCK_LOANS.map(l => l.category)));
@@ -56,7 +59,13 @@ export function FeaturedLoans() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow border-primary/10 bg-background/60 backdrop-blur-sm">
+              <SpotlightCard 
+                className="h-full flex flex-col hover:shadow-lg transition-shadow border-primary/10 bg-background/60 backdrop-blur-sm"
+                spotlightColor={resolvedTheme === "dark" 
+                  ? "rgba(30, 64, 175, 0.15)" // Darker Blue for Dark mode
+                  : "rgba(52, 211, 153, 0.05)" // Lighter Green for Light mode
+                }
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start mb-4">
                     <img src={loan.logo} alt={loan.bankName} className="h-8 object-contain" />
@@ -108,7 +117,7 @@ export function FeaturedLoans() {
                     Apply Now <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
-              </Card>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>

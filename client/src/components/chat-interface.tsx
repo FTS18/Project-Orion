@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,19 +9,26 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LRUCache } from "@/lib/performance-utils";
 
-// Simple markdown parser for chat messages
+// LRU Cache for parsed markdown - O(1) lookup for previously parsed messages
+const markdownCache = new LRUCache<string, React.ReactNode>(100);
+
+// Optimized markdown parser with caching
 function parseMarkdown(text: string): React.ReactNode {
   if (!text) return null;
+  
+  // Check cache first - O(1) lookup
+  const cached = markdownCache.get(text);
+  if (cached) return cached;
   
   // Split by lines first to handle bullets
   const lines = text.split('\n');
   
-  return lines.map((line, lineIndex) => {
+  const result = lines.map((line, lineIndex) => {
     // Parse inline markdown (bold, italic)
     const parseInline = (str: string): React.ReactNode[] => {
       const parts: React.ReactNode[] = [];
-      let remaining = str;
       let key = 0;
       
       // Match **bold** or *italic*
@@ -29,10 +36,10 @@ function parseMarkdown(text: string): React.ReactNode {
       let lastIndex = 0;
       let match;
       
-      while ((match = regex.exec(remaining)) !== null) {
+      while ((match = regex.exec(str)) !== null) {
         // Add text before match
         if (match.index > lastIndex) {
-          parts.push(remaining.slice(lastIndex, match.index));
+          parts.push(str.slice(lastIndex, match.index));
         }
         
         // Check if it's bold or italic
@@ -48,11 +55,11 @@ function parseMarkdown(text: string): React.ReactNode {
       }
       
       // Add remaining text
-      if (lastIndex < remaining.length) {
-        parts.push(remaining.slice(lastIndex));
+      if (lastIndex < str.length) {
+        parts.push(str.slice(lastIndex));
       }
       
-      return parts.length > 0 ? parts : [remaining];
+      return parts.length > 0 ? parts : [str];
     };
     
     // Check if line is a bullet point
@@ -69,6 +76,11 @@ function parseMarkdown(text: string): React.ReactNode {
       </span>
     );
   });
+  
+  // Cache the result - O(1) insert
+  markdownCache.put(text, result);
+  
+  return result;
 }
 
 
@@ -328,7 +340,8 @@ const BANK_STYLES: Record<string, string> = {
   "Kotak Mahindra Bank": "from-red-600/20 to-red-500/5 border-red-600/20 hover:border-red-600/50",
 };
 
-function LoanCardCarousel({ products, filterType, onSelect }: LoanCardCarouselProps) {
+// Memoized LoanCardCarousel - prevents re-renders when parent updates
+const LoanCardCarousel = memo(function LoanCardCarousel({ products, filterType, onSelect }: LoanCardCarouselProps) {
   const filteredProducts = useMemo(() => {
     if (!filterType || filterType === "All") return products;
     return products.filter(p => p.category.toLowerCase() === filterType.toLowerCase());
@@ -421,7 +434,7 @@ function LoanCardCarousel({ products, filterType, onSelect }: LoanCardCarouselPr
       )}
     </div>
   );
-}
+});
 
 interface ChatMessageProps {
   message: AgentMessage;
@@ -431,7 +444,8 @@ interface ChatMessageProps {
   onSelectLoan?: (product: any) => void;
 }
 
-function ChatMessage({ message, isLast, isNew, loanProducts, onSelectLoan }: ChatMessageProps) {
+// Memoized ChatMessage to prevent re-rendering history
+const ChatMessage = memo(function ChatMessage({ message, isLast, isNew, loanProducts, onSelectLoan }: ChatMessageProps) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
   const [displayedText, setDisplayedText] = useState(isNew && !isUser ? "" : message.content);
@@ -537,7 +551,7 @@ function ChatMessage({ message, isLast, isNew, loanProducts, onSelectLoan }: Cha
       </div>
     </motion.div>
   );
-}
+});
 
 export function ChatSkeleton() {
   return (

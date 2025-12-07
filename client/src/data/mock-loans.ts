@@ -1,4 +1,16 @@
 // Client-side mock loan data - no backend needed
+import { LRUCache, Trie, binarySearchInsertPoint } from '@/lib/performance-utils';
+
+// Pagination cache - O(1) lookup for already fetched pages
+const paginationCache = new LRUCache<string, { data: LoanProduct[], hasMore: boolean }>(20);
+
+// Search index using Trie - O(m) prefix search where m is query length
+const loanSearchIndex = new Trie<LoanProduct>();
+
+// Sorted indices for fast binary search lookups
+let sortedByInterestRate: LoanProduct[] = [];
+let sortedByMaxAmount: LoanProduct[] = [];
+
 export interface LoanProduct {
   id: string;
   bankName: string;
@@ -214,16 +226,94 @@ export function generateMockLoans(count: number): LoanProduct[] {
 // Generate a fixed pool of 50 items to simulate a database
 const DB_LOANS = shuffleLoans(generateMockLoans(50));
 
+// Initialize search index for O(m) prefix search
+function initializeSearchIndex() {
+  DB_LOANS.forEach(loan => {
+    // Index by product name words
+    loan.productName.split(/\s+/).forEach(word => {
+      if (word.length > 2) {
+        loanSearchIndex.insert(word, loan);
+      }
+    });
+    // Index by bank name
+    loanSearchIndex.insert(loan.bankName, loan);
+    // Index by category  
+    loanSearchIndex.insert(loan.category, loan);
+  });
+  
+  // Build sorted arrays for binary search
+  sortedByMaxAmount = [...DB_LOANS]
+    .filter(l => typeof l.maxAmount === 'number')
+    .sort((a, b) => (a.maxAmount as number) - (b.maxAmount as number));
+}
+
+// Initialize on module load
+initializeSearchIndex();
+
+// O(1) cache lookup, O(n) on cache miss for pagination
 export const fetchLoans = async (page: number = 1, limit: number = 12): Promise<{ data: LoanProduct[], hasMore: boolean }> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
+    const cacheKey = `page-${page}-${limit}`;
+    
+    // Check cache first - O(1) lookup
+    const cached = paginationCache.get(cacheKey);
+    if (cached) {
+      // Simulate minimal delay for cached results
+      await new Promise(resolve => setTimeout(resolve, 50));
+      return cached;
+    }
+    
+    // Simulate network delay for cache miss
+    await new Promise(resolve => setTimeout(resolve, 800)); 
     
     const start = (page - 1) * limit;
     const end = start + limit;
     const data = DB_LOANS.slice(start, end);
     
-    return {
+    const result = {
         data,
         hasMore: end < DB_LOANS.length
     };
+    
+    // Cache the result - O(1) insert
+    paginationCache.put(cacheKey, result);
+    
+    return result;
 };
+
+// Fast search using Trie - O(m) where m is query length
+export function searchLoans(query: string, maxResults: number = 20): LoanProduct[] {
+  if (query.length < 2) return [];
+  
+  const results = loanSearchIndex.search(query, maxResults * 2);
+  
+  // Deduplicate by ID using Map - O(n)
+  const uniqueResults = Array.from(
+    new Map(results.map(item => [item.id, item])).values()
+  );
+  
+  return uniqueResults.slice(0, maxResults);
+}
+
+// Binary search for loans by amount range - O(log n) lookup
+export function findLoansByAmountRange(minAmount: number, maxAmount: number): LoanProduct[] {
+  const startIdx = binarySearchInsertPoint(
+    sortedByMaxAmount,
+    { maxAmount: minAmount } as LoanProduct,
+    (a, b) => (a.maxAmount as number) - (b.maxAmount as number)
+  );
+  
+  const results: LoanProduct[] = [];
+  for (let i = startIdx; i < sortedByMaxAmount.length; i++) {
+    const loan = sortedByMaxAmount[i];
+    if ((loan.maxAmount as number) > maxAmount) break;
+    results.push(loan);
+  }
+  
+  return results;
+}
+
+// Get all loans (for initialization)
+export function getAllLoans(): LoanProduct[] {
+  return DB_LOANS;
+}
+

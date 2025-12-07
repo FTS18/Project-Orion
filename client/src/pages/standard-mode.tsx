@@ -8,6 +8,7 @@ import { FileUpload } from "@/components/file-upload";
 import { CustomerDataCard, LoanRequestCard, UnderwritingResultCard } from "@/components/data-card";
 import { StatusBadge } from "@/components/status-badge";
 import { SanctionLetterModal } from "@/components/sanction-letter-modal";
+import { DemoCustomerSelector } from "@/components/demo-customer-selector";
 import type { CustomerData, LoanDetails } from "@/components/custom-data-entry";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -387,6 +388,8 @@ export default function StandardModePage() {
               {currentStep === 1 && (
                 <Step1ApplicantInfo
                   userProfile={userProfile}
+                  customers={customers || []}
+                  selectedCustomerId={selectedCustomerId}
                   onCustomCustomerChange={setCustomCustomerData}
                   customCustomerData={customCustomerData}
                   onSelectCustomer={setSelectedCustomerId}
@@ -489,6 +492,8 @@ export default function StandardModePage() {
 
 interface Step1Props {
   userProfile?: UserProfile | null;
+  customers: Customer[];
+  selectedCustomerId?: string;
   onCustomCustomerChange: (data: CustomerData | null) => void;
   customCustomerData: CustomerData | null;
   onSelectCustomer: (id: string) => void;
@@ -497,193 +502,47 @@ interface Step1Props {
 
 function Step1ApplicantInfo({
   userProfile,
+  customers,
+  selectedCustomerId,
   onCustomCustomerChange,
   customCustomerData,
   onSelectCustomer,
   onNext
 }: Step1Props) {
-  const form = useForm<z.infer<typeof customerFormSchema>>({
-    resolver: zodResolver(customerFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      age: 25,
-      city: "",
-      monthlyNetSalary: 50000,
-      creditScore: 750,
-      preApprovedLimit: 300000,
-    },
-  });
-
-  // Auto-fill from user profile
-  useEffect(() => {
-    if (userProfile) {
-      form.reset({
-        name: `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim(),
-        email: userProfile.email,
-        phone: userProfile.phone,
-        age: userProfile.age || 25,
-        city: userProfile.city || "Mumbai",
-        monthlyNetSalary: userProfile.monthlySalary || 50000,
-        creditScore: 750,
-        preApprovedLimit: (userProfile.monthlySalary || 50000) * 10,
-      });
-    }
-  }, [userProfile, form]);
-
-  const onSubmit = (data: z.infer<typeof customerFormSchema>) => {
-    const newCustomer: CustomerData = {
-      customerId: `CUSTOM${Date.now()}`,
-      ...data,
-      existingLoan: false,
-      employmentType: 'salaried',
-    };
-    
-    onCustomCustomerChange(newCustomer);
-    onSelectCustomer(newCustomer.customerId);
-    onNext();
-  };
+  // Manual entry form removed as per user request to restrict to demo profiles
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col gap-4 mb-8">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <div className="p-2 rounded-full bg-primary/10 text-primary">
             <UserCircle className="w-5 h-5" />
           </div>
-          Enter Applicant Details
+          Select Applicant Profile
         </h3>
-        {userProfile && (
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 w-fit">
-            Auto-filled from Profile
-          </Badge>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Select a pre-configured profile to proceed with the application simulation.
+        </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="john@example.com" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="9876543210" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="age"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Age</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="25" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">City</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mumbai" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+      <DemoCustomerSelector 
+        customers={customers}
+        selectedCustomerId={selectedCustomerId}
+        onSelectCustomer={(c) => {
+          onCustomCustomerChange(null); // Clear custom data when selecting existing profile
+          onSelectCustomer(c.customerId);
+        }}
+        showDetails={true}
+      />
 
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="monthlyNetSalary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Monthly Salary (₹)</FormLabel>
-                    <FormControl>
-                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="creditScore"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Credit Score</FormLabel>
-                    <FormControl>
-                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="preApprovedLimit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Pre-approved Limit (₹)</FormLabel>
-                    <FormControl>
-                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <Button 
-            type="submit"
-            className="w-full mt-8 h-12 text-base font-medium shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]" 
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            {customCustomerData ? "Update Details" : "Save & Continue"}
-          </Button>
-        </form>
-      </Form>
+      <Button 
+        onClick={onNext}
+        disabled={!selectedCustomerId}
+        className="w-full mt-8 h-12 text-base font-medium shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]" 
+      >
+        <ArrowRight className="w-5 h-5 mr-2" />
+        Save & Continue
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, memo, useCallback, useMemo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { SpotlightCard } from "./ui/spotlight-card";
 import { Badge } from "./ui/badge";
@@ -100,21 +100,23 @@ function ProgressRing({ progress, size = 40, strokeWidth = 3, color }: {
   );
 }
 
-// 3D Tilt Card Component
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+// Memoized TiltCard Component
+const TiltCard = memo(function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   
+  // Use springs outside render loop where possible, but here they depend on hooks
   const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
   const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
   
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["8deg", "-8deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-8deg", "8deg"]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Optimized event handler
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const width = rect.width;
@@ -125,13 +127,13 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
     const yPct = mouseY / height - 0.5;
     x.set(xPct);
     y.set(yPct);
-  };
+  }, [x, y]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     x.set(0);
     y.set(0);
-  };
+  }, [x, y]);
 
   return (
     <motion.div
@@ -169,9 +171,9 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
       </div>
     </motion.div>
   );
-}
+});
 
-export function EnhancedAgentPanel({ 
+export const EnhancedAgentPanel = memo(function EnhancedAgentPanel({ 
   agentType, 
   status, 
   lastAction, 
@@ -327,16 +329,22 @@ export function EnhancedAgentPanel({
       </SpotlightCard>
     </TiltCard>
   );
-}
+});
 
-export function AgentPanelGrid({ 
-  agents 
+export const AgentPanelGrid = memo(function AgentPanelGrid({ 
+  agents,
+  activeAgentType
 }: { 
-  agents: Array<AgentPanelProps>
+  agents: Array<AgentPanelProps>;
+  activeAgentType?: AgentType | null;
 }) {
-  // Separate master agent from others
-  const masterAgent = agents.find(a => AGENT_CONFIGS[a.agentType]?.fullWidth);
-  const otherAgents = agents.filter(a => !AGENT_CONFIGS[a.agentType]?.fullWidth);
+  // Separate master agent from others with UseMemo
+  const { masterAgent, otherAgents } = useMemo(() => {
+    return {
+      masterAgent: agents.find(a => AGENT_CONFIGS[a.agentType]?.fullWidth),
+      otherAgents: agents.filter(a => !AGENT_CONFIGS[a.agentType]?.fullWidth)
+    };
+  }, [agents]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -348,7 +356,10 @@ export function AgentPanelGrid({
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
         >
-          <EnhancedAgentPanel {...masterAgent} />
+          <EnhancedAgentPanel 
+            {...masterAgent} 
+            isActive={masterAgent.agentType === activeAgentType}
+          />
         </motion.div>
       )}
 
@@ -362,7 +373,10 @@ export function AgentPanelGrid({
             transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
             className="h-[120px]"
           >
-            <EnhancedAgentPanel {...agent} />
+            <EnhancedAgentPanel 
+              {...agent} 
+              isActive={agent.agentType === activeAgentType}
+            />
           </motion.div>
         ))}
       </div>
@@ -371,7 +385,7 @@ export function AgentPanelGrid({
       <AgentConnectionLines />
     </div>
   );
-}
+});
 
 // Animated connection lines between agents
 function AgentConnectionLines() {
