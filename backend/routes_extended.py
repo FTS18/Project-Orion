@@ -9,12 +9,10 @@ from typing import Optional, List, Dict, Any
 import json
 from datetime import datetime
 
-# These would be imported from your services
-# from backend.services.rules_engine import rules_engine, BusinessRule  # TODO: Fix for Pydantic v2
-# from backend.services.ab_testing import ab_testing_framework
-# from backend.services.performance_analytics import performance_tracker
+from backend.services.rules_engine import RulesEngine, BusinessRule
 
-extended_router = APIRouter()  # Empty router for now
+# Initialize rules engine instance
+rules_engine = RulesEngine()
 
 router = APIRouter()
 
@@ -25,7 +23,23 @@ router = APIRouter()
 @router.get("/api/rules")
 async def get_rules():
     """Get all active business rules"""
-    return {"rules": rules_engine.get_rules()}
+    try:
+        rules_list = []
+        for r in rules_engine.rules:
+            rule_dict = {
+                "name": r.name,
+                "rule_type": r.rule_type.value,
+                "operator": r.operator.value,
+                "threshold": r.threshold,
+                "action": r.action,
+                "priority": r.priority,
+                "description": r.description,
+                "enabled": r.enabled,
+            }
+            rules_list.append(rule_dict)
+        return {"rules": rules_list}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/api/rules")

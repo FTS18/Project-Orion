@@ -30,7 +30,7 @@ from backend.models.schemas import (
 )
 from backend.storage.data import StorageManager
 from backend.agents.orchestrator import MasterAgent
-from backend.routes_extended import extended_router
+from backend.routes_extended import router as extended_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
     print("Shutting down...")
 
 app = FastAPI(title="Project Orion Backend", lifespan=lifespan)
+
+# Initialize master agent for conversation tracking
+master_agent = MasterAgent()
 
 # CORS Middleware
 app.add_middleware(
@@ -150,6 +153,8 @@ async def get_loan_products():
 @app.post("/api/verify-kyc", response_model=KycVerificationResponse)
 async def verify_kyc(request: KycVerificationRequest):
     """Verify KYC details"""
+    from backend.services.kyc import KycVerificationService
+    
     await asyncio.sleep(0.15)
 
     result = await KycVerificationService.verify(
@@ -186,6 +191,8 @@ async def extract_salary(request: dict):
 @app.post("/api/underwrite", response_model=UnderwritingResult)
 async def underwrite(request: UnderwritingRequest):
     """Process underwriting decision"""
+    from backend.services.underwriting import UnderwritingEngine
+    
     await asyncio.sleep(0.2)
 
     result = await UnderwritingEngine.evaluate(
