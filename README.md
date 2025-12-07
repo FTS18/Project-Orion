@@ -1,20 +1,35 @@
-# Project Orion - Agentic AI Loan Assistant (Gemini Powered)
 
-**Status**: ✅ **Full System Running** | ✨ **Gemini 2.5 Flash Integration** | 🎯 **Supabase Auth & DB** | 🚀 **Production Ready**
+<div align="center">
+  <img src="client/public/logo.png" alt="Project Orion Logo" width="120" />
+  <h1>Project Orion</h1>
+  <h3>Agentic AI Loan Processing System</h3>
+  <p>
+    <b>Powered by Google Gemini 2.5 Flash & Supabase</b>
+  </p>
+  <p>
+    Project Orion is a next-generation banking assistant that leverages autonomous AI agents to orchestrate the entire loan lifecycle—from initial consultation to final sanction—in real-time.
+  </p>
+
+  <p>
+    <a href="#-quick-start">🚀 Quick Start</a> •
+    <a href="#-key-features">✨ Key Features</a> •
+    <a href="#-architecture">🏗️ Architecture</a> •
+    <a href="#-configuration">⚙️ Configuration</a>
+  </p>
+</div>
 
 ---
 
-## 🚀 Quick Start (5 Minutes)
+## 🚀 Quick Start
 
 ### Prerequisites
 - **Python 3.10+**
-- **Node.js 18+** with npm
-- **Supabase Account** (for Auth & Database)
-- **Google Gemini API Key**
+- **Node.js 18+**
+- **Supabase Account** & **Google Gemini API Key**
 
 ### 1. Environment Setup
 
-Create a `.env` file in `client/` and `backend/` (or root depending on setup, but typically client needs VITE_ vars).
+Create `.env` files in `client/` and `backend/`.
 
 **`client/.env`**:
 ```env
@@ -22,197 +37,77 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-**`backend/.env`** (or set in system env):
+**`backend/.env`**:
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_service_role_key
 ```
 
-### 2. Installation & Setup
+### 2. Run Application
 
-**Step 1: Backend (Terminal 1)**
+**Backend (Terminal 1)**:
 ```bash
 cd backend
-# Create virtual env (optional but recommended)
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate # Mac/Linux
-
-# Install dependencies
+# Windows: .\venv\Scripts\activate | Mac/Linux: source venv/bin/activate
 pip install -r requirements.txt
-
-# Run Server
 python -m uvicorn app:app --host 127.0.0.1 --port 5000 --reload
 ```
-✅ Wait for: `Application startup complete`
 
-**Step 2: Frontend (Terminal 2)**
+**Frontend (Terminal 2)**:
 ```bash
 cd client
 npm install
 npm run dev
 ```
-✅ Wait for: `VITE ready`
 
-**Step 3: Open Browser**
-```
-http://localhost:5000 (Proxy to Frontend)
-OR
-http://localhost:5173 (Direct Vite Dev Server)
-```
-Click **"Agentic Mode"** to start the AI workflow.
-
----
-
-## 📁 Project Structure
-
-```
-Project-Orion/
-├── backend/                    # Python FastAPI
-│   ├── agents/
-│   │   ├── ai_orchestrator.py  # Gemini Orchestrator
-│   │   ├── gemini_service.py   # Google Gemini Integration
-│   │   └── ...
-│   ├── models/schemas.py       # Pydantic models
-│   ├── app.py                  # FastAPI main app
-│   └── requirements.txt
-├── client/                     # React + Vite
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── agentic-mode.tsx # Main Agent Interface
-│   │   │   ├── auth/            # Supabase Auth Pages
-│   │   │   └── ...
-│   │   ├── components/
-│   │   │   ├── chat-interface.tsx # Chat UI with Quick Replies
-│   │   │   ├── agent-panel.tsx    # Agent Status Visualization
-│   │   │   └── ...
-│   │   └── lib/supabase.ts      # Supabase Client
-│   └── package.json
-└── shared/                     # Shared types
-```
-
----
-
-## 🎯 System Architecture
-
-### AI Core: Google Gemini 2.5 Flash
-We have migrated from local Ollama models to **Google Gemini 2.5 Flash** for:
-- **Speed**: <1s response times.
-- **Accuracy**: Better context understanding and JSON extraction.
-- **Reliability**: No local hardware dependency.
-
-### Database & Auth: Supabase
-- **Authentication**: Email/Password & Google OAuth.
-- **Database**: PostgreSQL for storing User Profiles, Loan Applications, and Logs.
-- **Real-time**: Live updates for agent status (planned).
-
-### Agent Workflow (Orchestrator)
-The `AIOrchestrator` manages the conversation flow:
-1.  **Greeting**: Identifies user, fetches profile from Supabase.
-2.  **Sales**: Proposes loan offers based on financial data.
-3.  **Verification**: Validates KYC details.
-4.  **Underwriting**: Analyzes credit score & risk.
-5.  **Sanction**: Generates formal sanction letter.
+Visit `http://localhost:5000` to start using the Agentic Mode.
 
 ---
 
 ## ✨ Key Features
 
-- **Agentic AI Mode**: A specialized interface for complex workflows.
-- **Resizable Panels**: Customize your workspace (Chat vs. Agent View).
-- **Quick Replies**: Smart suggestions based on conversation context.
-- **Real-time Logs**: Watch the agents "think" and execute tasks.
-- **Sanction Letter Generation**: Automated PDF creation.
+- **🤖 Autonomous Agents**: Multi-agent orchestration for Sales, Verification, Underwriting, and Sanctioning.
+- **⚡ Real-Time Processing**: Powered by Gemini 2.5 Flash for sub-second latent interactions.
+- **🛡️ Secure & Compliant**: Full KYC verification and risk assessment workflows.
+- **📊 Dynamic Configuration**: Centralized config for loan products, rules, and agent behaviors.
+- **🎨 Modern UI**: Beautiful, responsive interface with dual-pane layout for chat and agent visibility.
 
 ---
 
-## 🧪 Testing Flow
+## 🏗️ Architecture
 
-1.  **Login/Signup**: Create an account or use Google Login.
-2.  **Profile**: Update your "Financial Information" in the Profile tab.
-3.  **Agentic Mode**: Go to the Agentic Mode page.
-4.  **Chat**:
-    - The agent will greet you by name.
-    - It will know your income and pre-approved limit.
-    - Follow the prompts (or use Quick Replies).
-    - Watch the "Agents" tab to see which agent is active.
+### AI Core: Google Gemini 2.5 Flash
+Migrated from local models to **Gemini 2.5 Flash** for superior speed (<1s latency), higher accuracy in JSON extraction, and zero local hardware dependency.
 
----
+### Backend: FastAPI & Python
+Robust Python backend handling the **AI Orchestrator**, managing context, state, and tool execution for agents.
 
-## 🔧 Troubleshooting
-
-**Backend Errors**
-- **Gemini API Error**: Check your `GEMINI_API_KEY`. Ensure it's valid and has quota.
-- **Supabase Error**: Verify `SUPABASE_URL` and keys in `.env`.
-
-**Frontend Errors**
-- **"Failed to fetch"**: Ensure Backend is running on port 5000.
-- **Auth Issues**: Clear cookies/local storage and try logging in again.
+### Database: Supabase (PostgreSQL)
+- **Identity**: Secure Auth via Email/Password & Google.
+- **Data**: comprehensive schemas for User Profiles, Applications, and Logs.
 
 ---
 
-## 📦 Configuration System
+## ⚙️ Configuration System
 
-Project Orion uses a centralized configuration system for easy customization without code changes.
+Project Orion features a centralized configuration engine `client/src/config` ensuring modifiability without deep code changes.
 
-### Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `client/src/config/agents.config.ts` | Agent types, colors, icons, capabilities |
-| `client/src/config/loan.config.ts` | Loan products, rates, eligibility rules |
-| `client/src/config/workflow.config.ts` | Workflow steps, conditions, timeouts |
-| `client/src/config/theme.config.ts` | Branding, colors, fonts, animations |
-| `client/src/config/features.config.ts` | Feature flags for toggling functionality |
-| `client/src/config/prompts.config.ts` | AI agent prompts and response templates |
-
-### Usage Examples
-
-```tsx
-// Import from central config
-import { AGENT_CONFIGS, LOAN_PRODUCTS, isFeatureEnabled } from "@/config";
-
-// Get agent config
-const masterAgent = AGENT_CONFIGS.master;
-
-// Check loan eligibility
-const result = checkEligibility("personal", creditScore, age, income);
-
-// Feature flag check
-if (isFeatureEnabled("particlesBackground")) {
-  // Show particles
-}
-```
-
-### Database-Driven Configuration (Supabase)
-
-For production environments, configurations can be stored in Supabase:
-
-```sql
--- Run the migration
-supabase migration up
-```
-
-Tables created:
-- `loan_products` - Configurable loan products with rates and limits
-- `eligibility_rules` - Dynamic eligibility criteria
-- `document_requirements` - Required documents per product
-- `rejection_reasons` - User-friendly rejection messages
-- `feature_flags` - Runtime feature toggles
+| Config File | Purpose |
+|-------------|---------|
+| `agents.config.ts` | Agent personas, tools, and capabilities |
+| `loan.config.ts` | Loan products, interest rates, and limits |
+| `workflow.config.ts` | Step-by-step workflow definitions |
+| `theme.config.ts` | Design tokens and branding |
 
 ---
 
-## 🚀 Deployment
-
-**Backend**: Render / Railway (Python)
-**Frontend**: Vercel / Netlify (Vite)
-**Database**: Supabase (Managed)
-
-See `DEPLOYMENT.md` (if available) for detailed steps.
-
----
-
-**Last Updated**: December 7, 2025
-**Version**: 2.1.0 (Centralized Configuration System)
-
+<div align="center">
+  <p>
+    Built with ❤️ by the Project Orion Team
+  </p>
+  <p>
+    © 2025 Project Orion
+  </p>
+</div>

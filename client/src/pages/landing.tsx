@@ -956,13 +956,13 @@ export default function LandingPage() {
               <div className="flex flex-col md:grid md:grid-cols-5 gap-4 md:gap-3 lg:gap-4">
                 {team.map((member, i) => {
                   // More vibrant gradient colors for each card
-                  const gradients = [
-                    "linear-gradient(135deg, #FF4757 0%, #FF6B81 100%)", // Vibrant Coral
-                    "linear-gradient(135deg, #00D2D3 0%, #54E3E5 100%)", // Vibrant Teal
-                    "linear-gradient(135deg, #3742FA 0%, #5352ED 100%)", // Electric Blue
-                    "linear-gradient(135deg, #A55EEA 0%, #8854D0 100%)", // Bright Purple
-                    "linear-gradient(135deg, #20BF6B 0%, #26DE81 100%)", // Neon Green
-                  ];
+                  // Dynamic gradients based on Organization
+                  const getGradient = (org: string) => {
+                    if (org.includes("PEC")) return "linear-gradient(135deg, #FFC107 0%, #FF9800 100%)"; // Gold-Orange-Yellow
+                    if (org.includes("PSIT")) return "linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)"; // Red
+                    if (org.includes("KIET")) return "linear-gradient(135deg, #3B82F6 0%, #4F46E5 100%)"; // Blue-Indigo
+                    return "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)"; // Default Purple
+                  };
                   
                   return (
                     <motion.div 
@@ -976,7 +976,7 @@ export default function LandingPage() {
                     >
                       <div 
                         className="relative rounded-2xl p-4 md:p-5 flex flex-row md:flex-col items-center md:items-center gap-4 md:gap-3 overflow-hidden shadow-lg"
-                        style={{ background: gradients[i] }}
+                        style={{ background: getGradient(member.org) }}
                       >
                         {/* Decorative Elements */}
                         <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 opacity-20">
