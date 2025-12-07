@@ -16,7 +16,7 @@ import StandardModePage from "@/pages/standard-mode";
 import AgenticModePage from "@/pages/agentic-mode";
 import FeaturesPage from "@/pages/features";
 import DocsPage from "@/pages/docs";
-import SecurityPage from "@/pages/security";
+// import SecurityPage from "@/pages/security"; // Merged
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
 import ContactPage from "@/pages/contact";
@@ -31,6 +31,15 @@ import OnboardingPage from "@/pages/auth/onboarding";
 import LoanMarketplace from "@/pages/loans/index";
 import { ProtectedRoute } from "@/lib/protected-route";
 
+// import AboutPage from "@/pages/about"; // Removed
+import CareersPage from "@/pages/careers";
+import BlogPage from "@/pages/blog";
+import CommunityPage from "@/pages/community";
+import LegalPage from "@/pages/legal";
+import Sitemap from "@/pages/sitemap";
+
+import BlogPostPage from "@/pages/blog-post";
+
 function Router() {
   return (
     <PageTransition>
@@ -43,7 +52,13 @@ function Router() {
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <Route path="/features" component={FeaturesPage} />
         <Route path="/docs" component={DocsPage} />
-        <Route path="/security" component={SecurityPage} />
+        {/* Security route merged into Features, About removed */}
+        <Route path="/careers" component={CareersPage} />
+        <Route path="/blog/:id" component={BlogPostPage} />
+        <Route path="/blog" component={BlogPage} />
+        <Route path="/community" component={CommunityPage} />
+        <Route path="/legal" component={LegalPage} />
+        <Route path="/sitemap" component={Sitemap} />
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/contact" component={ContactPage} />

@@ -11,7 +11,7 @@ class GeminiService:
     
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         self.session: Optional[aiohttp.ClientSession] = None
     
     async def _ensure_session(self):

@@ -249,6 +249,53 @@ I can help you with:
 
 What type of loan are you looking for today?"""
 
+        # Handle specific product selection from cards (e.g., "I want to apply for HDFC Xpress Personal Loan")
+        if "want to apply" in message_lower or "apply for" in message_lower or "select" in message_lower:
+            from backend.data.mock_loans import MOCK_LOANS
+            
+            best_match = None
+            best_score = 0
+            
+            # Try to match a product name - find the BEST match
+            for loan in MOCK_LOANS:
+                product_name_lower = loan["productName"].lower()
+                
+                # Calculate match score - how many words from product name appear in message
+                product_words = product_name_lower.split()
+                match_count = sum(1 for word in product_words if word in message_lower)
+                
+                # If full product name is in message, that's a perfect match
+                if product_name_lower in message_lower:
+                    match_count = 100  # Perfect match
+                
+                if match_count > best_score:
+                    best_score = match_count
+                    best_match = loan
+            
+            if best_match and best_score >= 2:  # At least 2 words must match
+                loan = best_match
+                conv.loan_requirements["loan_type"] = loan["category"]
+                conv.loan_requirements["selected_product_id"] = loan["id"]
+                conv.loan_requirements["selected_product_name"] = loan["productName"]
+                conv.loan_requirements["selected_product_rate"] = loan["interestRate"]  # Store rate for EMI calc
+                conv.agent_states["sales"].status = "active"
+                conv.agent_states["sales"].last_action = f"Selected {loan['productName']}"
+                conv.add_log("sales", "Product Selected", f"{loan['productName']} from {loan['bankName']}", "success")
+                
+                max_amt = loan['maxAmount']
+                max_formatted = f"₹{max_amt:,}" if isinstance(max_amt, int) else max_amt
+                
+                return f"""Excellent choice! You've selected **{loan['productName']}** from {loan['bankName']}.
+
+📋 **Product Details:**
+• **Type**: {loan['category']} Loan
+• **Interest Rate**: {loan['interestRate']}
+• **Max Amount**: {max_formatted}
+• **Tenure**: {loan['tenureRange']}
+• **Features**: {', '.join(loan['features'][:2])}
+
+How much would you like to borrow? Please enter the loan amount (e.g., ₹1,00,000 or 1 Lakh)."""
+
         # Loan type selection
         if any(word in message_lower for word in ["personal", "home", "business", "education"]):
             loan_type = "Personal"
@@ -347,14 +394,29 @@ I'll now initiate the verification process. Do you confirm these details?"""
 
         # Yes/confirm patterns
         if any(word in message_lower for word in ["yes", "confirm", "proceed", "ok", "okay", "sure"]):
-            conv.agent_states["verification"].status = "completed"
-            conv.agent_states["underwriting"].status = "active"
+            conv.agent_states["verification"].status = "active"
+            conv.agent_states["verification"].last_action = "Verifying KYC documents..."
+            conv.add_log("verification", "KYC Check", "Validating customer documents", "info")
             
             # Use selected product name if available
             product_name = conv.loan_requirements.get("selected_product_name", "your loan")
             
-            return f"""Excellent! ✅ Your details have been verified for **{product_name}**.
+            # Simulate verification completion
+            conv.agent_states["verification"].status = "completed"
+            conv.agent_states["verification"].last_action = "KYC Verified ✓"
+            conv.agent_states["underwriting"].status = "active"
+            conv.agent_states["underwriting"].last_action = "Analyzing credit profile..."
+            conv.add_log("verification", "KYC Complete", "All documents verified successfully", "success")
+            conv.add_log("underwriting", "Credit Check", "Running credit score analysis", "info")
             
+            return f"""Excellent! ✅ Your details have been verified for **{product_name}**.
+
+**🔄 Agent Status Updates:**
+• ✅ **Sales Agent**: Offer selected
+• ✅ **Verification Agent**: KYC documents verified
+• 🔄 **Underwriting Agent**: Analyzing credit profile...
+• ⏳ **Sanction Agent**: Waiting
+
 Now running credit assessment...
 • Checking credit score
 • Analyzing financial history
@@ -362,8 +424,109 @@ Now running credit assessment...
 
 This will take just a moment. Your application is progressing well! 📊"""
 
-        # Status/progress patterns
-        if any(word in message_lower for word in ["status", "progress", "update", "how"]):
+        # Status/progress/continue patterns - COMPLETE THE WORKFLOW
+        if any(word in message_lower for word in ["status", "progress", "update", "how", "continue", "next", "check"]):
+            # If underwriting is active, complete it and generate sanction
+            if conv.agent_states["underwriting"].status == "active":
+                conv.agent_states["underwriting"].status = "completed"
+                conv.agent_states["sanction"].status = "active"
+                
+                # Get loan details
+                loan_amount = conv.loan_requirements.get("loan_amount", 100000)
+                loan_type = conv.loan_requirements.get("loan_type", "Personal")
+                credit_score = conv.user_profile.get("creditScore", 750)
+                pre_approved = conv.user_profile.get("preApprovedLimit", 100000)
+                
+                # Decision based on credit score and amount
+                if credit_score < 700:
+                    return f"""❌ **Application Update**
+
+Unfortunately, we cannot approve your application at this time.
+
+**Reason**: Credit score ({credit_score}) is below minimum threshold of 700.
+
+**What you can do:**
+• Improve your credit score
+• Pay off existing debts
+• Apply again in 3-6 months
+
+Would you like to explore other options?"""
+                
+                elif loan_amount > pre_approved * 2:
+                    return f"""❌ **Application Update**
+
+Unfortunately, we cannot approve your application at this time.
+
+**Reason**: Requested amount (₹{loan_amount:,}) exceeds maximum eligible (₹{int(pre_approved * 2):,}).
+
+**What you can do:**
+• Request a lower amount (up to ₹{int(pre_approved * 2):,})
+• Provide additional income proof
+
+Would you like to try with a different amount?"""
+                
+                else:
+                    # APPROVED! Generate sanction letter
+                    conv.agent_states["underwriting"].last_action = "Credit approved ✓"
+                    conv.agent_states["sanction"].status = "active"
+                    conv.agent_states["sanction"].last_action = "Generating sanction letter..."
+                    conv.add_log("underwriting", "Approved", f"Credit score {credit_score} meets threshold", "success")
+                    conv.add_log("sanction", "Generating", "Creating official sanction document", "info")
+                    
+                    import time
+                    ref_number = f"SNCT{int(time.time())}"
+                    
+                    # Get product-specific interest rate if available
+                    product_rate_str = conv.loan_requirements.get("selected_product_rate", "10.50%")
+                    # Extract numeric rate from string like "10.50% - 15.75%"
+                    import re
+                    rate_match = re.search(r'(\d+\.?\d*)', product_rate_str)
+                    rate = float(rate_match.group(1)) if rate_match else 10.5
+                    
+                    # Tenure based on loan type
+                    tenure = 24 if loan_type == "Personal" else (120 if loan_type == "Home" else 36)
+                    
+                    # EMI calculation: EMI = P × r × (1+r)^n / ((1+r)^n - 1)
+                    monthly_rate = rate / 12 / 100
+                    if monthly_rate > 0:
+                        emi = int((loan_amount * monthly_rate * ((1 + monthly_rate) ** tenure)) / 
+                                (((1 + monthly_rate) ** tenure) - 1))
+                    else:
+                        emi = int(loan_amount / tenure)
+                    
+                    conv.agent_states["sanction"].status = "completed"
+                    conv.agent_states["sanction"].last_action = "Letter generated ✓"
+                    conv.add_log("sanction", "Complete", f"Sanction letter {ref_number} generated", "success")
+                    
+                    return f"""🎉 **Congratulations, {user_name}!**
+
+Your loan application has been **APPROVED**!
+
+**🔄 Agent Status Updates:**
+• ✅ **Sales Agent**: Offer selected
+• ✅ **Verification Agent**: KYC verified
+• ✅ **Underwriting Agent**: Credit approved (Score: {credit_score})
+• ✅ **Sanction Agent**: Letter generated
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**OFFICIAL SANCTION LETTER**
+Reference: **{ref_number}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 **Loan Details**
+• **Type**: {loan_type} Loan
+• **Amount**: ₹{loan_amount:,}
+• **Interest Rate**: {rate}% p.a.
+• **Tenure**: {tenure} months
+• **Monthly EMI**: ₹{emi:,}
+• **Total Repayment**: ₹{emi * tenure:,}
+• **Processing Fee**: ₹{int(loan_amount * 0.01):,}
+
+✅ **Status**: SANCTIONED
+📄 Your sanction letter is ready for download.
+
+Thank you for choosing Project Orion! 🙏"""
+            
             return f"""Here's your application status, {user_name}:
 
 🟢 **Sales**: Complete
@@ -372,6 +535,30 @@ This will take just a moment. Your application is progressing well! 📊"""
 ⚪ **Sanction**: Pending
 
 Your application is being processed. Expected completion: ~2 minutes."""
+
+        # Cancellation handling
+        if any(word in message_lower for word in ["cancel", "stop", "restart", "start over", "new application", "start new"]):
+            # Reset all agent states
+            for agent_type in conv.agent_states:
+                conv.agent_states[agent_type].status = "idle"
+                conv.agent_states[agent_type].last_action = ""
+                conv.agent_states[agent_type].progress = 0
+            
+            # Clear loan requirements
+            conv.loan_requirements = {}
+            conv.add_log("master", "Application Cancelled", "User initiated reset", "info")
+            
+            return f"""✅ Application cancelled and reset, {user_name}.
+
+I've cleared all your previous data. We can start fresh!
+
+What type of loan would you like to explore today?
+• **Personal Loan** - For personal expenses
+• **Home Loan** - For property purchase
+• **Business Loan** - For business needs
+• **Education Loan** - For studies
+
+Just let me know and I'll help you get started!"""
 
         # Default response
         return f"""I understand, {user_name}. Let me help you with that.

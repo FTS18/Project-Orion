@@ -1,0 +1,206 @@
+[
+    {
+        "offerId": "OFFER001",
+        "customerId": "CUST001",
+        "customerName": "Anita Verma",
+        "offerType": "Pre-Approved Personal Loan",
+        "preApprovedAmount": 150000,
+        "maxAmount": 300000,
+        "interestRate": 10.5,
+        "minTenure": 12,
+        "maxTenure": 60,
+        "processingFee": 1.5,
+        "validUntil": "2025-03-31",
+        "terms": [
+            "No collateral required",
+            "Instant disbursement to bank account",
+            "Flexible EMI options",
+            "No prepayment charges after 6 months"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "0% processing fee for amounts up to ₹1,00,000"
+    },
+    {
+        "offerId": "OFFER002",
+        "customerId": "CUST002",
+        "customerName": "Rahul Mehra",
+        "offerType": "Top-Up Personal Loan",
+        "preApprovedAmount": 100000,
+        "maxAmount": 200000,
+        "interestRate": 11.5,
+        "minTenure": 12,
+        "maxTenure": 48,
+        "processingFee": 2.0,
+        "validUntil": "2025-02-28",
+        "terms": [
+            "Existing loan consolidation available",
+            "Lower rate for existing customers",
+            "Flexible repayment schedule"
+        ],
+        "eligibilityStatus": "CONDITIONAL",
+        "specialOffer": null,
+        "condition": "Credit score improvement required for full amount"
+    },
+    {
+        "offerId": "OFFER003",
+        "customerId": "CUST003",
+        "customerName": "Sneha Kapoor",
+        "offerType": "Premium Personal Loan",
+        "preApprovedAmount": 200000,
+        "maxAmount": 400000,
+        "interestRate": 9.75,
+        "minTenure": 12,
+        "maxTenure": 72,
+        "processingFee": 1.0,
+        "validUntil": "2025-06-30",
+        "terms": [
+            "Premium interest rate for excellent credit",
+            "Dedicated relationship manager",
+            "Priority processing",
+            "Zero prepayment penalty"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "Get additional ₹50,000 with income proof"
+    },
+    {
+        "offerId": "OFFER004",
+        "customerId": "CUST004",
+        "customerName": "Prakash Singh",
+        "offerType": "Personal Loan",
+        "preApprovedAmount": 90000,
+        "maxAmount": 180000,
+        "interestRate": 12.5,
+        "minTenure": 12,
+        "maxTenure": 36,
+        "processingFee": 2.5,
+        "validUntil": "2025-01-31",
+        "terms": [
+            "Quick approval within 24 hours",
+            "Minimal documentation"
+        ],
+        "eligibilityStatus": "CONDITIONAL",
+        "specialOffer": null,
+        "condition": "Income verification required"
+    },
+    {
+        "offerId": "OFFER005",
+        "customerId": "CUST005",
+        "customerName": "Meera Nair",
+        "offerType": "Personal Loan",
+        "preApprovedAmount": 110000,
+        "maxAmount": 220000,
+        "interestRate": 11.0,
+        "minTenure": 12,
+        "maxTenure": 48,
+        "processingFee": 1.75,
+        "validUntil": "2025-04-30",
+        "terms": [
+            "Balance transfer available",
+            "No hidden charges",
+            "EMI holiday option available"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "Get ₹500 cashback on first EMI"
+    },
+    {
+        "offerId": "OFFER006",
+        "customerId": "CUST006",
+        "customerName": "Aditya Rao",
+        "offerType": "Personal Loan",
+        "preApprovedAmount": 80000,
+        "maxAmount": 160000,
+        "interestRate": 13.0,
+        "minTenure": 12,
+        "maxTenure": 36,
+        "processingFee": 2.5,
+        "validUntil": "2025-01-15",
+        "terms": [
+            "Self-employed friendly",
+            "ITR-based assessment"
+        ],
+        "eligibilityStatus": "CONDITIONAL",
+        "specialOffer": null,
+        "condition": "Additional documentation required for self-employed"
+    },
+    {
+        "offerId": "OFFER007",
+        "customerId": "CUST007",
+        "customerName": "Sunita Ghosh",
+        "offerType": "Premium Personal Loan",
+        "preApprovedAmount": 250000,
+        "maxAmount": 500000,
+        "interestRate": 9.5,
+        "minTenure": 12,
+        "maxTenure": 72,
+        "processingFee": 0.75,
+        "validUntil": "2025-12-31",
+        "terms": [
+            "Lowest interest rate for premium customers",
+            "Dedicated support line",
+            "Instant approval",
+            "Complimentary insurance"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "Zero processing fee for existing customers"
+    },
+    {
+        "offerId": "OFFER008",
+        "customerId": "CUST008",
+        "customerName": "Dev Patel",
+        "offerType": "Pre-Approved Personal Loan",
+        "preApprovedAmount": 160000,
+        "maxAmount": 320000,
+        "interestRate": 10.0,
+        "minTenure": 12,
+        "maxTenure": 60,
+        "processingFee": 1.25,
+        "validUntil": "2025-05-31",
+        "terms": [
+            "Pre-approved for instant disbursement",
+            "No income proof needed up to pre-approved limit",
+            "Flexible EMI dates"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "Get higher limit with salary slip verification"
+    },
+    {
+        "offerId": "OFFER009",
+        "customerId": "CUST009",
+        "customerName": "Ritika Sharma",
+        "offerType": "Personal Loan",
+        "preApprovedAmount": 60000,
+        "maxAmount": 120000,
+        "interestRate": 14.0,
+        "minTenure": 12,
+        "maxTenure": 24,
+        "processingFee": 3.0,
+        "validUntil": "2025-01-31",
+        "terms": [
+            "Self-employed flexible assessment",
+            "GST return based eligibility"
+        ],
+        "eligibilityStatus": "NOT_ELIGIBLE",
+        "specialOffer": null,
+        "condition": "Credit score below threshold - improve to 700+ for eligibility"
+    },
+    {
+        "offerId": "OFFER010",
+        "customerId": "CUST010",
+        "customerName": "Karan Verma",
+        "offerType": "Personal Loan",
+        "preApprovedAmount": 95000,
+        "maxAmount": 190000,
+        "interestRate": 11.25,
+        "minTenure": 12,
+        "maxTenure": 48,
+        "processingFee": 1.5,
+        "validUntil": "2025-03-31",
+        "terms": [
+            "Young professional discount",
+            "Step-up EMI option",
+            "Co-applicant benefit available"
+        ],
+        "eligibilityStatus": "ELIGIBLE",
+        "specialOffer": "Special rate for IT professionals"
+    }
+]

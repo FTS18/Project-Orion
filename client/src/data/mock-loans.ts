@@ -76,6 +76,18 @@ export const MOCK_LOANS: LoanProduct[] = [
     features: ["Same day disbursal", "Doorstep service", "Flexible repayment"],
     logo: "https://logo.clearbit.com/icicibank.com", category: "Gold"
   },
+  {
+    id: "icici-el-006", bankName: "ICICI Bank", loanType: "Education Loan", productName: "iSmart Education Loan",
+    interestRate: "9.50% - 13.00%", processingFee: "1.00%", maxAmount: 10000000, tenureRange: "Up to 15 years",
+    features: ["Cover tuition + living", "Pre-visa disbursal", "Tax benefit"],
+    logo: "https://logo.clearbit.com/icicibank.com", category: "Education"
+  },
+  {
+    id: "sbi-el-006", bankName: "State Bank of India", loanType: "Education Loan", productName: "Scholar Loan",
+    interestRate: "8.15% - 9.50%", processingFee: "Nil", maxAmount: 4000000, tenureRange: "Up to 15 years",
+    features: ["For premier institutions", "100% financing", "Quick sanction"],
+    logo: "https://logo.clearbit.com/sbi.co.in", category: "Education"
+  },
   // SBI
   {
     id: "sbi-pl-001", bankName: "State Bank of India", loanType: "Personal Loan", productName: "SBI Xpress Credit",
@@ -180,3 +192,38 @@ export function shuffleLoans(loans: LoanProduct[]): LoanProduct[] {
   }
   return shuffled;
 }
+
+export function generateMockLoans(count: number): LoanProduct[] {
+    const loans: LoanProduct[] = [];
+    for (let i = 0; i < count; i++) {
+        const template = MOCK_LOANS[i % MOCK_LOANS.length];
+        const multiplier = Math.floor(i / MOCK_LOANS.length) + 1;
+        loans.push({
+            ...template,
+            id: `${template.id}-${i}`,
+            productName: `${template.productName} ${multiplier > 1 ? '#' + multiplier : ''}`,
+            // Randomize amount slightly to make it look real
+            maxAmount: typeof template.maxAmount === 'number' 
+                ? template.maxAmount + (Math.floor(Math.random() * 10) * 100000)
+                : template.maxAmount
+        });
+    }
+    return loans;
+}
+
+// Generate a fixed pool of 50 items to simulate a database
+const DB_LOANS = shuffleLoans(generateMockLoans(50));
+
+export const fetchLoans = async (page: number = 1, limit: number = 12): Promise<{ data: LoanProduct[], hasMore: boolean }> => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
+    
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const data = DB_LOANS.slice(start, end);
+    
+    return {
+        data,
+        hasMore: end < DB_LOANS.length
+    };
+};

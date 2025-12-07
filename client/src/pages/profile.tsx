@@ -38,9 +38,9 @@ export default function ProfilePage() {
     employmentType: "salaried" as "salaried" | "self_employed",
     hasExistingLoan: false,
     existingLoanAmount: "",
+    creditScore: 750, // Mock credit score (editable for demo)
   });
   
-  const [creditScore, setCreditScore] = useState(0);
   const [preApprovedLimit, setPreApprovedLimit] = useState(0);
 
   useEffect(() => {
@@ -58,6 +58,11 @@ export default function ProfilePage() {
       // Load from user metadata
       if (user.user_metadata) {
         const salary = user.user_metadata.monthly_salary || 0;
+        
+        // Use saved credit score or generate random one for new users
+        const savedScore = user.user_metadata.credit_score;
+        const mockScore = savedScore || Math.floor(Math.random() * (850 - 650) + 650);
+        
         setFormData({
           firstName: user.user_metadata.first_name || "",
           lastName: user.user_metadata.last_name || "",
@@ -69,13 +74,11 @@ export default function ProfilePage() {
           employmentType: user.user_metadata.employment_type || "salaried",
           hasExistingLoan: user.user_metadata.has_existing_loan || false,
           existingLoanAmount: (user.user_metadata.existing_loan_amount || 0).toString(),
+          creditScore: mockScore,
         });
         
         // Calculate pre-approved limit (10x monthly salary)
-        setPreApprovedLimit(salary * 10);
-        
-        // Mock credit score (in real app, fetch from backend)
-        setCreditScore(750); // Default good score
+        setPreApprovedLimit(salary > 0 ? salary * 10 : mockScore * 500);
       }
       setIsLoading(false);
     };
@@ -100,11 +103,13 @@ export default function ProfilePage() {
           employment_type: formData.employmentType,
           has_existing_loan: formData.hasExistingLoan,
           existing_loan_amount: formData.hasExistingLoan ? parseInt(formData.existingLoanAmount) || 0 : 0,
+          credit_score: formData.creditScore, // Save mock credit score
+          pre_approved_limit: salary > 0 ? salary * 10 : formData.creditScore * 500,
         }
       });
       
       // Update pre-approved limit
-      setPreApprovedLimit(salary * 10);
+      setPreApprovedLimit(salary > 0 ? salary * 10 : formData.creditScore * 500);
 
       if (error) throw error;
 
@@ -305,15 +310,22 @@ export default function ProfilePage() {
                     <div className="p-4 border rounded-lg bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp className="h-5 w-5 text-primary" />
-                        <Label>Credit Score</Label>
+                        <Label>Credit Score (Demo)</Label>
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold">{creditScore}</span>
-                        <Badge variant={creditScore >= 750 ? "default" : creditScore >= 700 ? "secondary" : "destructive"}>
-                          {creditScore >= 750 ? "Excellent" : creditScore >= 700 ? "Good" : "Fair"}
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <Input
+                          type="number"
+                          min={300}
+                          max={900}
+                          value={formData.creditScore}
+                          onChange={(e) => setFormData(prev => ({ ...prev, creditScore: Math.min(900, Math.max(300, parseInt(e.target.value) || 650)) }))}
+                          className="w-24 text-2xl font-bold h-12"
+                        />
+                        <Badge variant={formData.creditScore >= 750 ? "default" : formData.creditScore >= 700 ? "secondary" : "destructive"}>
+                          {formData.creditScore >= 750 ? "Excellent" : formData.creditScore >= 700 ? "Good" : "Fair"}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Out of 900</p>
+                      <p className="text-xs text-muted-foreground">Editable for demo (300-900)</p>
                     </div>
 
                     <div className="p-4 border rounded-lg bg-primary/5">
@@ -324,7 +336,7 @@ export default function ProfilePage() {
                       <div className="text-3xl font-bold text-primary">
                         ₹{preApprovedLimit.toLocaleString('en-IN')}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Based on your salary</p>
+                      <p className="text-xs text-muted-foreground mt-1">Based on your salary & credit score</p>
                     </div>
                   </div>
 

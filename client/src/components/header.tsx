@@ -27,7 +27,6 @@ const navLinks = [
   { href: "/loans", label: "Loans", icon: FileText },
   { href: "/features", label: "Features", icon: Sparkles },
   { href: "/docs", label: "Docs", icon: BookOpen },
-  { href: "/security", label: "Security", icon: Lock },
 ];
 
 export function Header({ mode, onModeChange, showModeToggle = false }: HeaderProps) {

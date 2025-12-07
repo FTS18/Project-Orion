@@ -8,6 +8,10 @@ import { WorkflowGraph, WorkflowGraphHorizontal } from "@/components/workflow-gr
 import { InlineLogViewer } from "@/components/log-drawer";
 import { SanctionLetterModal } from "@/components/sanction-letter-modal";
 import { CustomDataEntry, type CustomerData, type LoanDetails } from "@/components/custom-data-entry";
+import { DemoCustomerSelector } from "@/components/demo-customer-selector";
+import { KYCDocumentViewer } from "@/components/kyc-document-viewer";
+import { LoanComparison } from "@/components/loan-comparison";
+import { DocumentUpload } from "@/components/document-upload";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { Button } from "@/components/ui/button";
@@ -41,17 +45,20 @@ import {
   Bot,
   Loader2,
   CheckCircle,
-  XCircle
+  XCircle,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { getCurrentUser, createWelcomeMessage, type UserProfile } from "@/lib/agent-user-context";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { ParticlesBackground } from "@/components/ui/particles-background";
+import { clientOrchestrator, DEMO_CUSTOMERS, generateSanctionLetter, checkBackendHealth } from "@/lib/client-fallback";
 import { SuccessConfetti } from "@/components/ui/confetti";
 import { isFeatureEnabled } from "@/config/features.config";
 import { getAgentWorkflowOrder } from "@/config/agents.config";
 import { LOAN_PRODUCTS } from "@/config/loan.config";
+import { MOCK_LOANS } from "@/data/mock-loans";
 
 type WorkflowMode = "auto" | "step";
 type WorkflowState = "idle" | "running" | "paused" | "completed" | "error";
@@ -96,19 +103,32 @@ export default function AgenticModePage() {
   const [sanctionLetter, setSanctionLetter] = useState<SanctionLetterResponse | null>(null);
   const [showSanctionModal, setShowSanctionModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState("agents");
+  const [activeTab, setActiveTab] = useState("demo");
   const [mobileView, setMobileView] = useState<"chat" | "agents">("chat");
+  const [showKYCDocs, setShowKYCDocs] = useState(false);
 
   const stepQueueRef = useRef<(() => Promise<void>)[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Fallback to client-side data when backend is unavailable
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    retry: 1,
+    retryDelay: 500,
+    staleTime: 60000,
   });
+
+  // Use DEMO_CUSTOMERS as fallback when API fails
+  const effectiveCustomers = customers || DEMO_CUSTOMERS as any[];
 
   const { data: loanProducts } = useQuery<any[]>({
     queryKey: ["/api/loans/products"],
+    retry: 1,
+    staleTime: 60000,
   });
+
+  // Use MOCK_LOANS as fallback when API fails
+  const effectiveLoanProducts = loanProducts || MOCK_LOANS;
 
   // Load user on mount and create welcome message
   useEffect(() => {
@@ -449,8 +469,97 @@ export default function AgenticModePage() {
     userProfileRef.current = userProfile;
   }, [userProfile]);
 
+  // Track if backend is reachable to avoid repeated connection attempts
+  const [isServerMode, setIsServerMode] = useState(true);
   const handleSendMessage = useCallback(async (content: string) => {
     const currentUserProfile = userProfileRef.current;
+    
+    // Handle download sanction letter request
+    if (content.toLowerCase().includes("download sanction")) {
+      const customerName = currentCustomer?.name || currentUserProfile?.firstName || "Customer";
+      const refNumber = `SNCT${Date.now()}`;
+      const loanAmount = customLoanData?.loanAmount || 100000;
+      
+      // Try to download from backend API (which generates PDF)
+      try {
+        const response = await fetch(`/api/sanction/${refNumber}.pdf`);
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Sanction_Letter_${refNumber}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          addMessage("master", "agent", `📥 Your **PDF sanction letter** has been downloaded!\n\nReference: **${refNumber}**\nFile: Sanction_Letter_${refNumber}.pdf\n\n✅ Your loan of **₹${loanAmount.toLocaleString('en-IN')}** is now sanctioned.\n\nWould you like to start a new application?`);
+          
+          toast({
+            title: "📄 PDF Downloaded",
+            description: `Sanction letter ${refNumber} saved successfully!`,
+          });
+          return;
+        }
+      } catch (error) {
+        console.log("Backend PDF not available, generating client-side...");
+      }
+      
+      // Fallback: Generate client-side if backend unavailable
+      const loanType = "Personal";
+      const rate = 10.5;
+      const tenure = 24;
+      const monthlyRate = rate / 12 / 100;
+      const emi = Math.round((loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1));
+      
+      const sanctionContent = `
+PROJECT ORION - SANCTION LETTER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reference Number: ${refNumber}
+Date: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+
+Dear ${customerName},
+
+We are pleased to inform you that your loan application has been APPROVED.
+
+LOAN DETAILS
+────────────────────────────────
+Loan Type:        ${loanType} Loan
+Amount:           ₹${loanAmount.toLocaleString('en-IN')}
+Interest Rate:    ${rate}% p.a.
+Tenure:           ${tenure} months
+Monthly EMI:      ₹${emi.toLocaleString('en-IN')}
+Total Repayment:  ₹${(emi * tenure).toLocaleString('en-IN')}
+Processing Fee:   ₹${Math.round(loanAmount * 0.01).toLocaleString('en-IN')}
+
+TERMS & CONDITIONS
+────────────────────────────────
+1. Valid for 30 days from issue date
+2. Disbursement subject to documentation
+3. Pre-closure allowed after 6 months
+4. EMI due by 5th of each month
+
+Thank you for choosing Project Orion!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+
+      const blob = new Blob([sanctionContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sanction_Letter_${refNumber}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      addMessage("master", "agent", `📥 Your sanction letter has been downloaded!\n\nReference: **${refNumber}**\nFile: Sanction_Letter_${refNumber}.txt\n\nWould you like to start a new application?`);
+      return;
+    }
+    
     // If custom data was entered, use it directly
     if (customCustomerData) {
       addMessage("master", "user", content);
@@ -474,19 +583,83 @@ export default function AgenticModePage() {
        customerId = "GUEST_" + Math.random().toString(36).substr(2, 9);
     }
 
-    /* 
-    if (!customerId && !userProfile) {
-      addMessage("master", "agent", "Please provide a valid Customer ID (e.g., CUST001) or log in to continue.");
-      return;
-    }
-    */
-
     // Add user message
     if (!customCustomerData) {
       addMessage("master", "user", content);
     }
     setIsProcessing(true);
     updateAgentStatus("master", { status: "active", lastAction: "Processing request" });
+
+    // Internal function to run client-side fallback with full orchestrator
+    const runClientFallback = async () => {
+      console.log("Running Client-Side Orchestrator Fallback...");
+      
+      try {
+        // Use client-side orchestrator for full workflow support
+        const result = await clientOrchestrator.processMessage(
+          content,
+          currentCustomer as any,
+          currentUserProfile
+        );
+        
+        // Add response message
+        addMessage("master", "agent", result.response);
+        
+        // Update agent states from client orchestrator
+        result.agentStates.forEach((state: any) => {
+          updateAgentStatus(state.agentType, {
+            status: state.status,
+            lastAction: state.lastAction,
+            progress: state.progress,
+          });
+          
+          // Show toast for completed agents
+          if (state.status === "completed" && state.lastAction) {
+            const agentNames: Record<string, string> = {
+              master: "Master Agent",
+              sales: "Sales Agent",
+              verification: "Verification Agent",
+              underwriting: "Underwriting Agent",
+              sanction: "Sanction Agent"
+            };
+            toast({
+              title: `✅ ${agentNames[state.agentType] || state.agentType}`,
+              description: state.lastAction,
+            });
+          }
+        });
+        
+        // Add workflow logs
+        result.logs.forEach((log: any) => {
+          addLog(log.agentType, log.action, log.details, log.level);
+        });
+        
+      } catch (fallbackError) {
+        console.error("Client fallback failed, trying Gemini:", fallbackError);
+        
+        // Ultimate fallback to Gemini direct
+        try {
+          const history = messages.map(m => ({
+            role: m.role === "user" ? "user" : "model",
+            parts: [{ text: m.content }]
+          }));
+          
+          const responseText = await chatWithGemini(content, history as any, currentUserProfile);
+          addMessage("master", "agent", responseText);
+        } catch (geminiError) {
+          console.error("All fallbacks failed:", geminiError);
+          addMessage("master", "agent", "I apologize, but I'm unable to process your request. The system is running in offline mode. Please try: 'Personal Loan', 'Home Loan', or enter an amount like '5 Lakhs'.");
+        }
+      }
+    };
+
+    if (!isServerMode) {
+      // If we already know server is down, skip straight to fallback
+      await runClientFallback();
+      setIsProcessing(false);
+      updateAgentStatus("master", { status: "completed" });
+      return;
+    }
 
     try {
       // Call backend API
@@ -496,7 +669,19 @@ export default function AgenticModePage() {
         body: JSON.stringify({
           customerId,
           message: content,
-          userProfile: currentUserProfile ? {
+          // Prioritize demo customer data over logged-in user profile
+          userProfile: currentCustomer ? {
+            firstName: currentCustomer.name.split(' ')[0],
+            lastName: currentCustomer.name.split(' ').slice(1).join(' '),
+            name: currentCustomer.name,
+            monthlyNetSalary: currentCustomer.monthlyNetSalary,
+            monthlySalary: currentCustomer.monthlyNetSalary,
+            preApprovedLimit: currentCustomer.preApprovedLimit,
+            creditScore: currentCustomer.creditScore,
+            employmentType: currentCustomer.employmentType,
+            existingLoan: currentCustomer.existingLoan === "yes",
+            city: currentCustomer.city,
+          } : currentUserProfile ? {
             ...currentUserProfile,
             // Add derived fields for backend
             monthlyNetSalary: currentUserProfile.monthlySalary,
@@ -517,9 +702,43 @@ export default function AgenticModePage() {
       // Add agent response
       addMessage("master", "agent", data.message);
 
-      // Update agent states
+      // Update agent states and show toast notifications
       if (data.agentStates) {
         data.agentStates.forEach((state: any) => {
+          const prevState = agents.find(a => a.agentType === state.agentType);
+          
+          // Show toast for completed agents
+          if (state.status === "completed" && prevState?.status !== "completed") {
+            const agentNames: Record<string, string> = {
+              master: "Master Agent",
+              sales: "Sales Agent",
+              verification: "Verification Agent",
+              underwriting: "Underwriting Agent",
+              sanction: "Sanction Agent"
+            };
+            
+            toast({
+              title: `✅ ${agentNames[state.agentType] || state.agentType}`,
+              description: state.lastAction || "Task completed",
+            });
+          }
+          
+          // Show toast for active agents
+          if (state.status === "active" && prevState?.status !== "active") {
+            const agentNames: Record<string, string> = {
+              master: "Master Agent",
+              sales: "Sales Agent",
+              verification: "Verification Agent",
+              underwriting: "Underwriting Agent",
+              sanction: "Sanction Agent"
+            };
+            
+            toast({
+              title: `🔄 ${agentNames[state.agentType] || state.agentType}`,
+              description: state.lastAction || "Processing...",
+            });
+          }
+          
           updateAgentStatus(state.agentType, {
             status: state.status,
             lastAction: state.lastAction,
@@ -545,26 +764,17 @@ export default function AgenticModePage() {
     } catch (error) {
       console.error("Backend Error:", error);
       
-      // Client-Side Fallback
-      console.log("Attempting Client-Side Gemini Fallback...");
+      // Mark server as unavailable for future requests
+      setIsServerMode(false);
+
       toast({
-        title: "Backend Unavailable",
-        description: "Switching to client-side AI mode.",
+        title: "Switched to Client-Side AI",
+        description: "Backend unavailable. Running efficiently in browser mode.",
         variant: "default",
       });
 
-      try {
-        const history = messages.map(m => ({
-          role: m.role === "user" ? "user" : "model",
-          parts: [{ text: m.content }]
-        }));
-        
-        const responseText = await chatWithGemini(content, history as any, currentUserProfile);
-        addMessage("master", "agent", responseText);
-      } catch (fallbackError) {
-        console.error("Fallback failed:", fallbackError);
-        addMessage("master", "agent", "I apologize, but I'm unable to process your request at the moment. Please check your internet connection or API configuration.");
-      }
+      await runClientFallback();
+
     } finally {
       setIsProcessing(false);
       updateAgentStatus("master", { status: "completed" });
@@ -575,6 +785,8 @@ export default function AgenticModePage() {
     updateAgentStatus,
     currentCustomer,
     customers,
+    isServerMode,
+    chatWithGemini // ensure check
   ]);
 
   const handleReset = useCallback(() => {
@@ -612,9 +824,62 @@ export default function AgenticModePage() {
             <div className="mb-8 text-center">
               <h1 className="text-4xl font-bold mb-2">Agentic AI Loan Assistant</h1>
               <p className="text-muted-foreground text-lg">
-                Let's get your information first, then I'll help you through the entire loan process
+                Choose how you'd like to start - quick demo with sample data or enter your details
               </p>
             </div>
+            
+            {/* Quick Start: Demo Customer Selector */}
+            {effectiveCustomers && effectiveCustomers.length > 0 && (
+              <SpotlightCard className="mb-6 p-6" spotlightColor="rgba(var(--primary), 0.05)">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" />
+                  Quick Demo Start
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select a customer profile to see different loan scenarios in action
+                </p>
+                <DemoCustomerSelector
+                  customers={effectiveCustomers}
+                  selectedCustomerId={currentCustomer?.customerId}
+                  onSelectCustomer={(customer) => {
+                    setCurrentCustomer(customer);
+                    setCustomCustomerData({
+                      customerId: customer.customerId,
+                      name: customer.name,
+                      age: customer.age,
+                      city: customer.city,
+                      phone: customer.phone,
+                      email: customer.email,
+                      employmentType: customer.employmentType,
+                      monthlyNetSalary: customer.monthlyNetSalary,
+                      monthlyIncome: customer.monthlyNetSalary,
+                    });
+                    setShowDataEntry(false);
+                    
+                    // Create welcome message with customer data
+                    const welcomeMsg: AgentMessage = {
+                      id: "welcome-demo",
+                      agentType: "master",
+                      role: "agent",
+                      content: `Hello ${customer.name}! 👋 Welcome to Project Orion.\n\nI'm your AI Loan Assistant powered by **LangGraph** multi-agent orchestration.\n\nBased on your profile:\n• **Credit Score**: ${customer.creditScore}/900\n• **Pre-approved Limit**: ₹${customer.preApprovedLimit.toLocaleString('en-IN')}\n\nWhat type of loan are you looking for today? (Personal / Home / Business)`,
+                      timestamp: new Date().toISOString(),
+                    };
+                    setMessages([welcomeMsg]);
+                    addLog("master", "Demo Profile Loaded", `${customer.name} (Credit: ${customer.creditScore})`, "success");
+                    setShowKYCDocs(true);
+                  }}
+                />
+              </SpotlightCard>
+            )}
+            
+            {/* Divider */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-sm text-muted-foreground">OR</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            
+            {/* Custom Data Entry */}
             <CustomDataEntry
               onCustomerSelected={(data) => {
                 setCustomCustomerData(data);
@@ -678,7 +943,13 @@ export default function AgenticModePage() {
           return ["Check Status", "Continue"];
         }
         
-        // Application status
+        // IMPORTANT: Completion check MUST come before status check (because "Status: SANCTIONED" contains "status")
+        // Completion - Loan Approved
+        if (text.includes("approved") || text.includes("sanctioned") || text.includes("congratulations") || text.includes("congrat") || text.includes("official sanction letter")) {
+          return ["Download Sanction Letter", "Start New Application"];
+        }
+        
+        // Application status (AFTER completion check)
         if (text.includes("status") || text.includes("in progress")) {
           return ["View Details", "Cancel Application"];
         }
@@ -692,10 +963,10 @@ export default function AgenticModePage() {
         if (text.includes("purpose")) {
           return ["Education", "Medical", "Home Renovation", "Business"];
         }
-
-        // Completion
-        if (text.includes("approved") || text.includes("sanction")) {
-          return ["View Sanction Letter", "Start New Application"];
+        
+        // After checking status during underwriting
+        if (text.includes("in progress") && text.includes("underwriting")) {
+          return ["Check Status", "Continue Processing"];
         }
 
         // Business Specific
@@ -782,6 +1053,19 @@ export default function AgenticModePage() {
                     <Badge 
                       variant="outline" 
                       className={cn(
+                        "transition-colors duration-300",
+                        isServerMode 
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-800"
+                          : "bg-orange-500/10 text-orange-600 border-orange-200 dark:border-orange-800"
+                      )}
+                    >
+                      <div className={cn("w-2 h-2 rounded-full mr-2 animate-pulse", isServerMode ? "bg-emerald-500" : "bg-orange-500")} />
+                      {isServerMode ? "Cloud Connected" : "Client-Side Mode"}
+                    </Badge>
+
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
                         workflowState === "running" && "bg-blue-500/10 text-blue-500",
                         workflowState === "completed" && "bg-green-500/10 text-green-500",
                         workflowState === "error" && "bg-red-500/10 text-red-500"
@@ -793,25 +1077,6 @@ export default function AgenticModePage() {
                       {workflowState === "completed" && "Completed"}
                       {workflowState === "error" && "Error"}
                     </Badge>
-
-                    <div className="flex items-center gap-1 border rounded-lg p-1">
-                      <Button
-                        variant={workflowMode === "auto" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setWorkflowMode("auto")}
-                        data-testid="button-mode-auto"
-                      >
-                        Auto
-                      </Button>
-                      <Button
-                        variant={workflowMode === "step" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setWorkflowMode("step")}
-                        data-testid="button-mode-step"
-                      >
-                        Step
-                      </Button>
-                    </div>
 
                     <Button
                       variant="outline"
@@ -834,7 +1099,7 @@ export default function AgenticModePage() {
                 placeholder={isProcessing ? "Processing..." : userProfile ? "Tell me about your loan requirements..." : "Type your message or Customer ID..."}
                 className="flex-1 border-0 rounded-none min-h-0"
                 suggestedActions={getSuggestedActions()}
-                loanProducts={loanProducts}
+                loanProducts={effectiveLoanProducts}
               />
             </ResizablePanel>
 
@@ -874,6 +1139,14 @@ export default function AgenticModePage() {
                       >
                         <Settings className="h-4 w-4" />
                         Workflow
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="demo" 
+                        className="gap-2 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-4" 
+                        data-testid="tab-demo"
+                      >
+                        <Users className="h-4 w-4" />
+                        Demo
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -954,6 +1227,75 @@ export default function AgenticModePage() {
                       <div className="min-h-[200px] max-h-[400px]">
                         <InlineLogViewer logs={logs} className="h-full" />
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="demo" className="data-[state=inactive]:hidden flex-1 flex flex-col m-0 p-4 min-h-0 overflow-auto">
+                    <div className="flex flex-col gap-4">
+                      <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.05)">
+                        <h3 className="font-semibold mb-3">Demo Customer Profiles</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select a customer to simulate different loan scenarios. Each profile demonstrates a specific edge case.
+                        </p>
+                        {effectiveCustomers && (
+                          <DemoCustomerSelector
+                            customers={effectiveCustomers}
+                            selectedCustomerId={currentCustomer?.customerId}
+                            onSelectCustomer={(customer) => {
+                              setCurrentCustomer(customer);
+                              setShowKYCDocs(true);
+                              addLog("master", "Demo Profile Selected", `${customer.name} (${customer.customerId})`, "info");
+                              // Add context message
+                              addMessage("master", "system", `Demo: Switched to ${customer.name}'s profile (Credit Score: ${customer.creditScore}, Pre-approved: ₹${customer.preApprovedLimit.toLocaleString('en-IN')})`);
+                            }}
+                          />
+                        )}
+                      </SpotlightCard>
+
+                      {showKYCDocs && currentCustomer && (
+                        <SpotlightCard className="p-4 animate-fade-in" spotlightColor="rgba(var(--primary), 0.03)">
+                          <h3 className="font-semibold mb-3">KYC Documents</h3>
+                          <KYCDocumentViewer
+                            customerId={currentCustomer.customerId}
+                            customerName={currentCustomer.name}
+                            phone={currentCustomer.phone}
+                            city={currentCustomer.city}
+                            isVerified={agents.find(a => a.agentType === "verification")?.status === "completed"}
+                          />
+                        </SpotlightCard>
+                      )}
+
+                      {/* Document Upload Section */}
+                      {currentCustomer && (
+                        <SpotlightCard className="p-4 animate-fade-in" spotlightColor="rgba(var(--primary), 0.03)">
+                          <DocumentUpload
+                            customerName={currentCustomer.name}
+                            onComplete={(docs) => {
+                              addLog("verification", "Documents Uploaded", `${docs.length} documents verified`, "success");
+                              toast({
+                                title: "📄 Documents Verified",
+                                description: "All required documents have been verified successfully!",
+                              });
+                            }}
+                          />
+                        </SpotlightCard>
+                      )}
+
+                      {/* Loan Comparison Section */}
+                      {effectiveLoanProducts && effectiveLoanProducts.length > 0 && (
+                        <SpotlightCard className="p-4" spotlightColor="rgba(var(--primary), 0.03)">
+                          <h3 className="font-semibold mb-3">Compare Loan Products</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Select up to 3 products to compare side-by-side.
+                          </p>
+                          <LoanComparison
+                            products={effectiveLoanProducts}
+                            onSelect={(product) => {
+                              handleSendMessage(`I want to apply for the ${product.productName} from ${product.bankName}`);
+                            }}
+                          />
+                        </SpotlightCard>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>

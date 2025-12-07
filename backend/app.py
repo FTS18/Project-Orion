@@ -103,6 +103,41 @@ async def get_offers():
     return offers
 
 
+@app.get("/api/offers/{customer_id}")
+async def get_customer_offers(customer_id: str):
+    """Get pre-approved offers for a specific customer from Offer Mart"""
+    import json
+    import os
+    
+    await asyncio.sleep(0.1)
+    
+    # Load from offers.json (Offer Mart)
+    offers_path = os.path.join(os.path.dirname(__file__), "..", "data", "offers.json")
+    try:
+        with open(offers_path, "r") as f:
+            all_offers = json.load(f)
+        
+        # Filter offers for this customer
+        customer_offers = [o for o in all_offers if o.get("customerId") == customer_id]
+        
+        if not customer_offers:
+            raise HTTPException(status_code=404, detail="No offers found for customer")
+        
+        return {
+            "customerId": customer_id,
+            "offers": customer_offers,
+            "totalOffers": len(customer_offers)
+        }
+    except FileNotFoundError:
+        # Fallback to in-memory offers
+        offers = StorageManager.get_offers_by_customer(customer_id)
+        return {
+            "customerId": customer_id,
+            "offers": [o.dict() for o in offers],
+            "totalOffers": len(offers)
+        }
+
+
 @app.get("/api/loans/products")
 async def get_loan_products():
     """Get all available loan products from partner banks"""
@@ -207,7 +242,11 @@ async def get_audit_logs(customer_id: str):
 
 @app.get("/api/sanction/{reference_number}.pdf")
 async def download_sanction(reference_number: str):
-    """Download sanction letter (placeholder)"""
+    """Download sanction letter as PDF"""
+    from fastapi.responses import Response
+    from datetime import datetime
+    from io import BytesIO
+    
     await asyncio.sleep(0.1)
 
     # Remove .pdf extension if included
@@ -217,12 +256,178 @@ async def download_sanction(reference_number: str):
     if not letter:
         raise HTTPException(status_code=404, detail="Sanction letter not found")
 
-    # Return placeholder PDF content
-    return {
-        "filename": f"sanction_{ref}.pdf",
-        "content": f"Sanction Letter\nReference: {ref}\nGenerated: {letter['generatedAt']}",
-        "mimeType": "application/pdf",
-    }
+    # Generate PDF using reportlab
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        from reportlab.lib.units import inch, cm
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+        
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'Title',
+            parent=styles['Heading1'],
+            fontSize=20,
+            alignment=TA_CENTER,
+            spaceAfter=20,
+            textColor=colors.HexColor('#1a1a2e')
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            alignment=TA_CENTER,
+            textColor=colors.gray
+        )
+        
+        heading_style = ParagraphStyle(
+            'Heading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceBefore=20,
+            spaceAfter=10,
+            textColor=colors.HexColor('#4361ee')
+        )
+        
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=6
+        )
+        
+        # Build PDF content
+        elements = []
+        
+        # Header
+        elements.append(Paragraph("🚀 PROJECT ORION", title_style))
+        elements.append(Paragraph("Agentic AI Loan Processing System", subtitle_style))
+        elements.append(Spacer(1, 0.5*inch))
+        
+        # Sanction Letter Title
+        elements.append(Paragraph("OFFICIAL SANCTION LETTER", heading_style))
+        elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#4361ee')))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Reference and Date
+        customer_name = letter.get('customerName', 'Valued Customer')
+        date_str = datetime.now().strftime('%d %B %Y')
+        elements.append(Paragraph(f"<b>Reference Number:</b> {ref}", normal_style))
+        elements.append(Paragraph(f"<b>Date:</b> {date_str}", normal_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Greeting
+        elements.append(Paragraph(f"Dear <b>{customer_name}</b>,", normal_style))
+        elements.append(Spacer(1, 0.1*inch))
+        elements.append(Paragraph(
+            "We are pleased to inform you that your loan application has been <b>APPROVED</b>. "
+            "Please find the details of your sanctioned loan below:",
+            normal_style
+        ))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Loan Details Table
+        elements.append(Paragraph("LOAN DETAILS", heading_style))
+        
+        loan_amount = letter.get('amount', 100000)
+        interest_rate = letter.get('interestRate', 10.5)
+        tenure = letter.get('tenure', 24)
+        emi = letter.get('emi', 4637)
+        total_repayment = letter.get('totalRepayment', emi * tenure)
+        processing_fee = int(loan_amount * 0.01)
+        
+        loan_data = [
+            ['Loan Type', f"{letter.get('loanType', 'Personal')} Loan"],
+            ['Sanctioned Amount', f"₹{loan_amount:,}"],
+            ['Interest Rate', f"{interest_rate}% per annum"],
+            ['Tenure', f"{tenure} months"],
+            ['Monthly EMI', f"₹{emi:,}"],
+            ['Total Repayment', f"₹{total_repayment:,}"],
+            ['Processing Fee', f"₹{processing_fee:,} (1%)"],
+        ]
+        
+        table = Table(loan_data, colWidths=[3*inch, 3*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f4ff')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ddd')),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Terms & Conditions
+        elements.append(Paragraph("TERMS & CONDITIONS", heading_style))
+        terms = [
+            "1. This sanction is valid for 30 days from the date of issue.",
+            "2. Disbursement is subject to completion of all documentation.",
+            "3. Pre-closure is allowed after 6 months with nominal charges.",
+            "4. EMI should be paid by the 5th of every month.",
+            "5. Delay in EMI payment will attract penalty charges.",
+        ]
+        for term in terms:
+            elements.append(Paragraph(term, normal_style))
+        
+        elements.append(Spacer(1, 0.5*inch))
+        
+        # Footer
+        elements.append(HRFlowable(width="100%", thickness=1, color=colors.gray))
+        elements.append(Spacer(1, 0.2*inch))
+        elements.append(Paragraph("Thank you for choosing Project Orion!", 
+                                  ParagraphStyle('Footer', alignment=TA_CENTER, fontSize=12, textColor=colors.gray)))
+        elements.append(Paragraph("This is a system-generated document", 
+                                  ParagraphStyle('Small', alignment=TA_CENTER, fontSize=9, textColor=colors.lightgrey)))
+        
+        # Build PDF
+        doc.build(elements)
+        
+        pdf_content = buffer.getvalue()
+        buffer.close()
+        
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=Sanction_Letter_{ref}.pdf"
+            }
+        )
+        
+    except ImportError:
+        # Fallback to text if reportlab not available
+        content = f"""
+PROJECT ORION - SANCTION LETTER
+Reference: {ref}
+Date: {datetime.now().strftime('%d %B %Y')}
+
+Dear {letter.get('customerName', 'Valued Customer')},
+
+Your loan application has been APPROVED!
+
+Loan Amount: ₹{letter.get('amount', 100000):,}
+Interest Rate: {letter.get('interestRate', 10.5)}%
+Tenure: {letter.get('tenure', 24)} months
+
+Thank you for choosing Project Orion!
+"""
+        return Response(
+            content=content,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename=Sanction_Letter_{ref}.txt"
+            }
+        )
 
 
 # ============================================================================
@@ -232,19 +437,10 @@ async def download_sanction(reference_number: str):
 
 @app.post("/api/agent/chat", response_model=ChatResponse)
 async def agent_chat(request: ChatRequest):
-    """Chat with agentic AI system powered by Ollama"""
+    """Chat with agentic AI system - Multi-agent orchestration"""
     
     from backend.agents.ai_orchestrator import ai_orchestrator
     
-    # Use provided user profile or extract if customer_id starts with USER_
-    user_profile = request.userProfile
-    
-    if not user_profile and request.customerId.startswith("USER_"):
-        # Fallback if profile wasn't passed but it's a user ID
-        # In a real app, we'd fetch from DB here
-        pass
-    
-    # Process message through AI orchestrator
     result = await ai_orchestrator.process_message(
         request.customerId,
         request.message,
