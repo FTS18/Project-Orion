@@ -17,7 +17,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 blur-sm pointer-events-none"
+              className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-sm pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           type={type}
           className={cn(
             "relative flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-all duration-300",
-            isFocused && "border-violet-500/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
+            isFocused && "border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.15)]",
             className
           )}
           ref={ref}
@@ -44,7 +44,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         {/* Animated underline */}
         <div className="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-md">
           <motion.div
-            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500"
+            className="h-full bg-gradient-to-r from-primary/80 to-primary"
             initial={{ scaleX: 0 }}
             animate={{ scaleX: isFocused ? 1 : 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}

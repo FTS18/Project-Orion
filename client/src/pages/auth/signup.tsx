@@ -1,46 +1,96 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Github, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/header";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+// Zod schema for signup validation
+const signupSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must be less than 50 characters")
+    .regex(/^[a-zA-Z\s]+$/, "First name can only contain letters"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must be less than 50 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Last name can only contain letters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleSignup = async (values: SignupFormValues) => {
     setIsLoading(true);
     
     try {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            first_name: values.firstName,
+            last_name: values.lastName,
           },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes("already registered")) {
+          throw new Error("This email is already registered. Try logging in instead.");
+        }
+        throw error;
+      }
 
       toast({
-        title: "Account created",
-        description: "Please check your email to verify your account.",
+        title: "Account created! ✨",
+        description: "Please check your email (including spam folder) to verify your account.",
       });
       navigate("/auth/login");
     } catch (error: any) {
@@ -87,69 +137,102 @@ export default function SignupPage() {
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
               <CardDescription>
-                Enter your email below to create your account
+                Enter your details below to create your account
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name">First name</Label>
-                    <Input 
-                      id="first-name" 
-                      placeholder="John" 
-                      required 
-                      className="bg-background/50"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSignup)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="John" 
+                              className="bg-background/50"
+                              autoComplete="given-name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Doe" 
+                              className="bg-background/50"
+                              autoComplete="family-name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last-name">Last name</Label>
-                    <Input 
-                      id="last-name" 
-                      placeholder="Doe" 
-                      required 
-                      className="bg-background/50"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    required 
-                    className="bg-background/50"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="name@example.com" 
+                            className="bg-background/50"
+                            autoComplete="email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    required 
-                    className="bg-background/50"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            className="bg-background/50"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="text-xs text-muted-foreground">
+                          Min 8 characters with uppercase, lowercase, and number
+                        </p>
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
-                </Button>
-              </form>
+                  <Button className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </Button>
+                </form>
+              </Form>
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -162,16 +245,12 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" disabled={isLoading}>
-                  <Github className="mr-2 h-4 w-4" />
-                  Github
-                </Button>
-                <Button variant="outline" disabled={isLoading} onClick={handleGoogleLogin}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-              </div>
+              <Button variant="outline" className="w-full" disabled={isLoading} onClick={handleGoogleLogin}>
+                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                  <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                </svg>
+                Sign in with Google
+              </Button>
             </CardContent>
             <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
               <div>

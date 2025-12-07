@@ -76,7 +76,11 @@ class KycVerificationService:
 
     @staticmethod
     def _fuzzy_match(str1: str, str2: str) -> bool:
-        """Fuzzy string matching with 80% threshold"""
+        """
+        Fuzzy string matching using Advanced Algorithms.
+        Uses a combination of Jaccard and Cosine similarity.
+        """
+        from backend.services.advanced_algorithms import AdvancedAlgorithms
 
         def normalize(s: str) -> str:
             return s.lower().strip().replace("  ", " ")
@@ -92,18 +96,14 @@ class KycVerificationService:
         if n1 in n2 or n2 in n1:
             return True
 
-        # Similarity threshold
-        similarity = KycVerificationService._calculate_similarity(n1, n2)
-        return similarity > 0.8
-
-    @staticmethod
-    def _calculate_similarity(str1: str, str2: str) -> float:
-        """Calculate string similarity ratio"""
-        longer = str1 if len(str1) > len(str2) else str2
-        shorter = str2 if len(str1) > len(str2) else str1
-
-        if len(longer) == 0:
-            return 1.0
-
-        matches = sum(1 for c in shorter if c in longer)
-        return matches / len(longer)
+        # Advanced Similarity Check
+        # Jaccard is good for word overlap (e.g. "John Doe" vs "Doe John")
+        jaccard_score = AdvancedAlgorithms.jaccard_similarity(n1, n2)
+        
+        # Cosine is good for overall content similarity
+        cosine_score = AdvancedAlgorithms.cosine_similarity(n1, n2)
+        
+        # Weighted combination: 60% Jaccard, 40% Cosine
+        combined_score = (jaccard_score * 0.6) + (cosine_score * 0.4)
+        
+        return combined_score > 0.7

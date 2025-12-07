@@ -1,4 +1,4 @@
-import { Moon, Sun, Laptop, LogOut, User, Settings, Shield, Menu, Home, Sparkles, FileText, BookOpen, Lock } from "lucide-react";
+import { Moon, Sun, LogOut, User, UserPlus, Settings, Shield, Menu, Home, Sparkles, FileText, BookOpen, Lock, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useTheme } from "@/lib/theme-provider";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ interface HeaderProps {
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/loans", label: "Loans", icon: FileText },
   { href: "/features", label: "Features", icon: Sparkles },
   { href: "/docs", label: "Docs", icon: BookOpen },
   { href: "/security", label: "Security", icon: Lock },
@@ -36,6 +37,7 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
   const [userName, setUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,110 +75,85 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
     return location.startsWith(href);
   };
 
+  const handleThemeToggle = () => {
+    if (themeButtonRef.current) {
+      const rect = themeButtonRef.current.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      setTheme(theme === "dark" ? "light" : "dark", { x, y });
+    } else {
+      setTheme(theme === "dark" ? "light" : "dark");
+    }
+  };
+
   return (
     <header 
       className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       role="banner"
     >
-      <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between gap-4">
-        {/* Mobile Menu Button */}
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="mr-2">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72">
-            <SheetHeader>
-              <SheetTitle>
-                <span className="text-xl font-bold text-foreground">
-                  Project Orion
-                </span>
-              </SheetTitle>
-            </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-2">
-              {navLinks.map((link, index) => {
-                const Icon = link.icon;
-                const isActive = isActiveRoute(link.href);
-                return (
-                  <motion.a
-                    key={link.href}
-                    href={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{link.label}</span>
-                  </motion.a>
-                );
-              })}
-              
-              <div className="border-t my-4" />
-              
-              <motion.a
-                href="/standard"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                  isActiveRoute("/standard") 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <FileText className="h-5 w-5" />
-                <span className="font-medium">Standard Mode</span>
-              </motion.a>
-              
-              <motion.a
-                href="/agentic"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25 }}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                  isActiveRoute("/agentic") 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Sparkles className="h-5 w-5" />
-                <span className="font-medium">Agentic Mode</span>
-              </motion.a>
-            </nav>
-          </SheetContent>
-        </Sheet>
+      <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between gap-4 relative">
+        <div className="flex items-center gap-2 lg:gap-6">
+          {/* Mobile Menu Button */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon" className="-ml-2">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] pr-0">
+               <SheetHeader className="px-7 text-left">
+                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                  <div className="flex items-center gap-2 mb-8">
+            <img src="/logo.png" alt="Project Orion" className="h-8 w-8 object-contain" />
+                    <span className="font-bold text-lg">Project Orion</span>
+                  </div>
+                </SheetHeader>
+                <nav className="flex flex-col gap-2 p-4">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
+                        isActiveRoute(link.href)
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <link.icon className="h-5 w-5" />
+                      <span className="font-medium">{link.label}</span>
+                    </a>
+                  ))}
+                  <div className="border-t my-4" />
+                  <a href="/standard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                    <FileText className="h-5 w-5" />
+                    <span className="font-medium">Standard Mode</span>
+                  </a>
+                  <a href="/agentic" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                    <Sparkles className="h-5 w-5" />
+                    <span className="font-medium">Agentic Mode</span>
+                  </a>
+                </nav>
+            </SheetContent>
+          </Sheet>
 
-        {/* Logo - Text Only */}
-        <a 
-          href="/" 
-          className="hover-elevate active-elevate-2 rounded-lg px-2 py-1 -ml-2"
-          data-testid="link-home"
-          aria-label="Go to home page"
-        >
-          <motion.span 
-            className="text-xl font-bold text-foreground"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          {/* Logo - Icon + Text */}
+          <a 
+            href="/" 
+            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-lg px-2 py-1"
+            data-testid="link-home"
+            aria-label="Go to home page"
           >
-            Project Orion
-          </motion.span>
-        </a>
+            <img src="/logo.png" alt="Project Orion" className="h-8 w-8 object-contain" />
+            <span className="font-bold text-lg tracking-tight hidden sm:inline-block">Project Orion</span>
+            <span className="font-bold text-lg tracking-tight sm:hidden">Orion</span>
+          </a>
+        </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => {
             const isActive = isActiveRoute(link.href);
             return (
@@ -204,38 +181,28 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
           })}
         </nav>
 
-        {showModeToggle && mode && (
-          <div 
-            className="hidden sm:flex items-center gap-1 p-1 bg-muted rounded-lg"
-            role="tablist"
-            aria-label="Application mode"
-          >
+        {/* Right Section: Actions */}
+        <div className="flex items-center gap-2">
+           {/* Persistent Mode Buttons (Desktop) */}
+          <div className="hidden lg:flex items-center gap-1 p-1 bg-muted rounded-lg mr-2">
             <Button
-              variant={mode === "standard" ? "default" : "ghost"}
+              variant={location === "/standard" ? "default" : "ghost"}
               size="sm"
-              onClick={() => onModeChange?.("standard")}
-              className="text-sm font-medium"
-              role="tab"
-              aria-selected={mode === "standard"}
-              data-testid="button-mode-standard"
+              onClick={() => navigate("/standard")}
+              className="text-sm font-medium h-7"
             >
-              Standard Mode
+              Standard
             </Button>
             <Button
-              variant={mode === "agentic" ? "default" : "ghost"}
+              variant={location === "/agentic" ? "default" : "ghost"}
               size="sm"
-              onClick={() => onModeChange?.("agentic")}
-              className="text-sm font-medium"
-              role="tab"
-              aria-selected={mode === "agentic"}
-              data-testid="button-mode-agentic"
+              onClick={() => navigate("/agentic")}
+              className="text-sm font-medium h-7"
             >
-              Agentic AI Mode
+              AI Agent
             </Button>
           </div>
-        )}
 
-        <div className="flex items-center gap-2">
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -253,9 +220,7 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
                     <span className="font-medium">{userName}</span>
-                    <span className="text-xs text-muted-foreground font-normal">
-                      {session.user?.email}
-                    </span>
+                    <span className="text-xs text-muted-foreground font-normal">{session.user?.email}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -263,15 +228,6 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile & Settings</span>
                 </DropdownMenuItem>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/admin")}>
-                      <Shield className="mr-2 h-4 w-4" />
-                      <span>Admin Dashboard</span>
-                    </DropdownMenuItem>
-                  </>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -284,49 +240,26 @@ export function Header({ mode, onModeChange, showModeToggle = false }: HeaderPro
               <Button variant="ghost" size="sm" onClick={() => navigate("/auth/login")} className="hidden sm:flex">
                 Sign In
               </Button>
-              <Button size="sm" onClick={() => navigate("/auth/signup")}>
-                Sign Up
+              <Button size="sm" onClick={() => navigate("/auth/signup")} className="h-8 w-8 p-0 lg:w-auto lg:h-9 lg:px-4 lg:text-sm lg:font-medium rounded-full lg:rounded-md bg-transparent border lg:bg-primary lg:text-primary-foreground lg:border-0 hover:bg-muted lg:hover:bg-primary/90">
+                 <UserPlus className="h-5 w-5 lg:hidden text-foreground" />
+                 <span className="hidden lg:inline">Sign Up</span>
               </Button>
             </>
           )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                aria-label="Toggle theme"
-                data-testid="button-theme-toggle"
-              >
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" aria-hidden="true" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" aria-hidden="true" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem 
-                onClick={() => setTheme("light")}
-                data-testid="menu-item-light"
-              >
-                <Sun className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Light</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setTheme("dark")}
-                data-testid="menu-item-dark"
-              >
-                <Moon className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Dark</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setTheme("system")}
-                data-testid="menu-item-system"
-              >
-                <Laptop className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>System</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button 
+            ref={themeButtonRef}
+            variant="ghost" 
+            size="icon"
+            onClick={handleThemeToggle}
+            aria-label="Toggle theme"
+            data-testid="button-theme-toggle"
+            className="hover:bg-transparent"
+          >
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" aria-hidden="true" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" aria-hidden="true" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
         </div>
       </div>
     </header>

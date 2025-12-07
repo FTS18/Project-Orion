@@ -7,20 +7,13 @@ function getApiBaseUrl(): string {
     return import.meta.env.VITE_API_URL;
   }
 
-  // For development/local
-  if (
-    typeof window !== "undefined" &&
-    window.location.hostname === "localhost"
-  ) {
-    return "http://localhost:8000";
-  }
-
-  // For Vercel/hosted frontend (no backend - will use mock data)
+  // For development/local - use same origin (Express server proxies via Vite)
+  // The Express server on port 5000 serves both API and client
   return "";
 }
 
 export const API_BASE_URL = getApiBaseUrl();
-export const USE_MOCK_DATA = API_BASE_URL === "";
+export const USE_MOCK_DATA = false; // Always use real API when available
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

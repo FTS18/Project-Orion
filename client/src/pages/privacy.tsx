@@ -161,7 +161,7 @@ export default function PrivacyPage() {
             </SpotlightCard>
 
             <p className="text-sm text-muted-foreground text-center">
-              Last Updated: December 2024
+              Last Updated: December 1, 2025
             </p>
           </div>
         </div>

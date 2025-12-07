@@ -4,7 +4,6 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,6 +12,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Mail,
   Phone,
@@ -22,24 +32,71 @@ import {
   Send
 } from "lucide-react";
 
-export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "general",
-    message: ""
-  });
-  const [submitted, setSubmitted] = useState(false);
+// Zod schema for contact form
+const contactSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  subject: z.enum(["general", "support", "billing", "feedback", "security"]),
+  message: z
+    .string()
+    .min(1, "Message is required")
+    .min(10, "Message must be at least 10 characters")
+    .max(2000, "Message must be less than 2000 characters"),
+});
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would send the form data to your backend
-    console.log("Form submitted:", formData);
-    setSubmitted(true);
+type ContactFormValues = z.infer<typeof contactSchema>;
+
+export default function ContactPage() {
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "general",
+      message: "",
+    },
+  });
+
+  const handleSubmit = (values: ContactFormValues) => {
+    setIsSubmitting(true);
+    
+    // Compose subject line
+    const subjectMap: Record<string, string> = {
+      general: "General Inquiry",
+      support: "Technical Support",
+      billing: "Billing Question",
+      feedback: "Feedback",
+      security: "Security Concern",
+    };
+    const subject = encodeURIComponent(`[Project Orion] ${subjectMap[values.subject]}`);
+    
+    // Compose email body
+    const body = encodeURIComponent(
+      `Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`
+    );
+    
+    // Open mailto link
+    window.location.href = `mailto:dubeyananay@gmail.com?subject=${subject}&body=${body}`;
+    
+    // Show success state
     setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: "", email: "", subject: "general", message: "" });
-    }, 3000);
+      setSubmitted(true);
+      setIsSubmitting(false);
+      setTimeout(() => {
+        setSubmitted(false);
+        form.reset();
+      }, 3000);
+    }, 500);
   };
 
   const contactMethods = [
@@ -47,15 +104,15 @@ export default function ContactPage() {
       icon: Mail,
       title: "Email",
       description: "Send us an email anytime",
-      contact: "support@projectorion.com",
-      link: "mailto:support@projectorion.com"
+      contact: "dubeyananay@gmail.com",
+      link: "mailto:dubeyananay@gmail.com"
     },
     {
       icon: Phone,
       title: "Phone",
       description: "Call us during business hours",
-      contact: "+1 (800) 555-0123",
-      link: "tel:+18005550123"
+      contact: "+91 9580711960",
+      link: "tel:+919580711960"
     },
     {
       icon: MessageSquare,
@@ -68,7 +125,7 @@ export default function ContactPage() {
       icon: MapPin,
       title: "Office",
       description: "Visit our headquarters",
-      contact: "San Francisco, CA",
+      contact: "Panjim, Goa, India",
       link: "#"
     }
   ];
@@ -143,63 +200,94 @@ export default function ContactPage() {
                       Thank you for your message! We'll be in touch soon.
                     </div>
                   )}
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Full Name *</Label>
-                      <Input
-                        id="name"
-                        placeholder="Your name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
 
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email *</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="your@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
 
-                    <div>
-                      <Label htmlFor="subject">Subject *</Label>
-                      <Select value={formData.subject} onValueChange={(value) => setFormData({ ...formData, subject: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General Inquiry</SelectItem>
-                          <SelectItem value="support">Technical Support</SelectItem>
-                          <SelectItem value="billing">Billing Question</SelectItem>
-                          <SelectItem value="feedback">Feedback</SelectItem>
-                          <SelectItem value="security">Security Concern</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="message">Message *</Label>
-                      <textarea
-                        id="message"
-                        className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-32"
-                        placeholder="Your message..."
-                        value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        required
+                      <FormField
+                        control={form.control}
+                        name="subject"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Subject *</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="general">General Inquiry</SelectItem>
+                                <SelectItem value="support">Technical Support</SelectItem>
+                                <SelectItem value="billing">Billing Question</SelectItem>
+                                <SelectItem value="feedback">Feedback</SelectItem>
+                                <SelectItem value="security">Security Concern</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
 
-                    <Button type="submit" className="w-full gap-2">
-                      <Send className="h-4 w-4" />
-                      Send Message
-                    </Button>
-                  </form>
+                      <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Message *</FormLabel>
+                            <FormControl>
+                              <textarea
+                                className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-32"
+                                placeholder="Your message..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
               </SpotlightCard>
             </div>
@@ -235,8 +323,8 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   <p className="mb-3">For urgent issues requiring immediate assistance:</p>
-                  <a href="tel:+18005550123" className="text-primary hover:underline font-medium">
-                    Call +1 (800) 555-0123
+                  <a href="tel:+919580711960" className="text-primary hover:underline font-medium">
+                    Call +91 9580711960
                   </a>
                 </CardContent>
               </SpotlightCard>

@@ -11,6 +11,7 @@ import {
   Settings,
   HelpCircle
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
@@ -24,198 +25,204 @@ export default function DocsPage() {
       <Header />
       
       <main className="flex-1 pt-24 pb-16">
-        <div className="max-w-4xl mx-auto px-4 md:px-8">
-          {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-4">Documentation</h1>
-            <p className="text-lg text-muted-foreground">
-              Complete guide to using Project Orion
-            </p>
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex flex-col md:flex-row gap-12">
+            
+            {/* Sidebar Navigation (Visual Only for now) */}
+            <div className="hidden md:block w-64 shrink-0 space-y-8">
+              <div>
+                <h3 className="font-semibold mb-3 text-foreground">Getting Started</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="text-primary font-medium">Introduction</li>
+                  <li className="hover:text-foreground cursor-pointer">Standard Mode</li>
+                  <li className="hover:text-foreground cursor-pointer">Agentic Mode</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-3 text-foreground">API Reference</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="hover:text-foreground cursor-pointer">Authentication</li>
+                  <li className="hover:text-foreground cursor-pointer">Customers</li>
+                  <li className="hover:text-foreground cursor-pointer">Loans</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-12">
+                <h1 className="text-4xl font-bold mb-4 tracking-tight">Documentation</h1>
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  Everything you need to know about building, integrating, and using Project Orion's advanced loan processing capabilities.
+                </p>
+              </div>
+
+              <Tabs defaultValue="getting-started" className="w-full space-y-8">
+                <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent gap-6">
+                  <TabsTrigger 
+                    value="getting-started" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      <span>Guide</span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="api" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Code className="h-4 w-4" />
+                      <span>API Reference</span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="faq" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4" />
+                      <span>FAQ</span>
+                    </div>
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Getting Started Content */}
+                <TabsContent value="getting-started" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <SpotlightCard className="h-full" spotlightColor="rgba(var(--primary), 0.1)">
+                      <CardHeader>
+                        <Zap className="h-8 w-8 text-yellow-500 mb-2" />
+                        <h2 className="text-2xl font-bold">Quick Start</h2>
+                        <CardDescription>Get up and running in minutes</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex gap-4">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">1</div>
+                          <div>
+                            <h3 className="font-semibold">Select Mode</h3>
+                            <p className="text-sm text-muted-foreground">Choose between Standard (Wizard) or Agentic (AI) modes from the dashboard.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">2</div>
+                          <div>
+                            <h3 className="font-semibold">Input Data</h3>
+                            <p className="text-sm text-muted-foreground">Provide customer details or log in to fetch your profile automatically.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">3</div>
+                          <div>
+                            <h3 className="font-semibold">Get Approved</h3>
+                            <p className="text-sm text-muted-foreground">Receive an instant decision and download your sanction letter.</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </SpotlightCard>
+
+                    <div className="space-y-6">
+                      <SpotlightCard spotlightColor="rgba(var(--primary), 0.05)">
+                        <CardHeader>
+                          <h3 className="text-xl font-semibold">Standard Mode</h3>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            A traditional, step-by-step wizard interface perfect for users who prefer a structured, linear process.
+                          </p>
+                          <ul className="text-sm space-y-2">
+                            <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Manual data entry</li>
+                            <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Visual progress tracking</li>
+                          </ul>
+                        </CardContent>
+                      </SpotlightCard>
+
+                      <SpotlightCard spotlightColor="rgba(var(--primary), 0.05)">
+                        <CardHeader>
+                          <h3 className="text-xl font-semibold">Agentic AI Mode</h3>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            An advanced conversational interface where AI agents collaborate to process your application autonomously.
+                          </p>
+                          <ul className="text-sm space-y-2">
+                            <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Natural language interaction</li>
+                            <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" />Real-time multi-agent orchestration</li>
+                          </ul>
+                        </CardContent>
+                      </SpotlightCard>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* API Content */}
+                <TabsContent value="api" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <SpotlightCard className="overflow-hidden" spotlightColor="rgba(var(--primary), 0.1)">
+                    <div className="border-b bg-muted/50 p-4">
+                      <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <Database className="h-5 w-5" /> Core Endpoints
+                      </h2>
+                    </div>
+                    <div className="divide-y">
+                      {[
+                        { method: "GET", path: "/api/customers", desc: "List all available customers" },
+                        { method: "POST", path: "/api/extract-salary", desc: "Extract salary data from PDF documents" },
+                        { method: "POST", path: "/api/verify-kyc", desc: "Perform KYC verification against database" },
+                        { method: "POST", path: "/api/underwrite", desc: "Submit application for underwriting decision" },
+                        { method: "POST", path: "/api/generate-sanction-letter", desc: "Generate official PDF sanction letter" }
+                      ].map((endpoint, i) => (
+                        <div key={i} className="p-4 hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 font-mono text-sm">
+                            <span className={cn(
+                              "px-2 py-1 rounded text-xs font-bold",
+                              endpoint.method === "GET" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            )}>
+                              {endpoint.method}
+                            </span>
+                            <span className="text-foreground">{endpoint.path}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{endpoint.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </SpotlightCard>
+                </TabsContent>
+
+                {/* FAQ Content */}
+                <TabsContent value="faq" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
+                    <CardHeader>
+                      <h2 className="text-2xl font-bold mb-2">Common Questions</h2>
+                      <CardDescription>Everything you need to know about the platform</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="item-1">
+                          <AccordionTrigger className="text-lg">How fast is the approval process?</AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                            Our AI-driven underwriting engine processes applications in real-time. Typically, you can receive a decision within 2-3 minutes of submitting your documents.
+                          </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-2">
+                          <AccordionTrigger className="text-lg">Is my financial data secure?</AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                            Absolutely. We use bank-grade 256-bit encryption for all data transmission and storage. We are fully compliant with data protection regulations and never share your data without consent.
+                          </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-3">
+                          <AccordionTrigger className="text-lg">What happens if I get rejected?</AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                            If your application is not approved, our AI will provide specific reasons (e.g., low credit score, high debt-to-income ratio). You can address these issues and reapply after 30 days.
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </CardContent>
+                  </SpotlightCard>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="getting-started" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="getting-started" className="gap-2">
-                <BookOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">Getting Started</span>
-              </TabsTrigger>
-              <TabsTrigger value="api" className="gap-2">
-                <Code className="h-4 w-4" />
-                <span className="hidden sm:inline">API Guide</span>
-              </TabsTrigger>
-              <TabsTrigger value="faq" className="gap-2">
-                <HelpCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">FAQ</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Getting Started */}
-            <TabsContent value="getting-started" className="space-y-4 mt-6">
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-xl font-semibold">Getting Started with Project Orion</h2>
-                  <CardDescription>Begin your loan application journey in just a few steps</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold mb-2">1. Choose Your Mode</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Select between Standard Mode (guided wizard) or Agentic AI Mode (conversational AI)
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">2. Enter Your Details</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Provide your personal information, or select from pre-approved customers
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">3. Upload Documents</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Upload salary documents for automatic verification
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">4. Complete Verification</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Our agents verify your KYC and process your application
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">5. Get Decision</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Receive instant decision and download sanction letter
-                    </p>
-                  </div>
-                </CardContent>
-              </SpotlightCard>
-
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-xl font-semibold">Standard Mode</h2>
-                  <CardDescription>Step-by-step guided wizard flow</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p>• Traditional form-based approach</p>
-                  <p>• Clear progress tracking</p>
-                  <p>• Manual control over each step</p>
-                  <p>• Perfect for users who prefer guided processes</p>
-                </CardContent>
-              </SpotlightCard>
-
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-xl font-semibold">Agentic AI Mode</h2>
-                  <CardDescription>Conversational AI-assisted processing</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p>• Natural conversation with AI agent</p>
-                  <p>• Intelligent multi-agent coordination</p>
-                  <p>• Real-time agent status tracking</p>
-                  <p>• Ideal for seamless automation</p>
-                </CardContent>
-              </SpotlightCard>
-            </TabsContent>
-
-            {/* API Guide */}
-            <TabsContent value="api" className="space-y-4 mt-6">
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-xl font-semibold">API Endpoints</h2>
-                  <CardDescription>Backend API reference</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-muted p-4 rounded-lg space-y-3">
-                    <div>
-                      <p className="font-mono text-sm font-semibold">GET /api/customers</p>
-                      <p className="text-xs text-muted-foreground mt-1">Fetch all available customers</p>
-                    </div>
-                    <div className="border-t border-border pt-3">
-                      <p className="font-mono text-sm font-semibold">POST /api/extract-salary</p>
-                      <p className="text-xs text-muted-foreground mt-1">Extract salary details from PDF</p>
-                    </div>
-                    <div className="border-t border-border pt-3">
-                      <p className="font-mono text-sm font-semibold">POST /api/verify-kyc</p>
-                      <p className="text-xs text-muted-foreground mt-1">Verify KYC details</p>
-                    </div>
-                    <div className="border-t border-border pt-3">
-                      <p className="font-mono text-sm font-semibold">POST /api/underwrite</p>
-                      <p className="text-xs text-muted-foreground mt-1">Get underwriting decision</p>
-                    </div>
-                    <div className="border-t border-border pt-3">
-                      <p className="font-mono text-sm font-semibold">POST /api/generate-sanction-letter</p>
-                      <p className="text-xs text-muted-foreground mt-1">Generate sanction letter PDF</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </SpotlightCard>
-
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-xl font-semibold">Agent API</h2>
-                  <CardDescription>Multi-agent orchestration</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p>• Master Agent coordinates workflow</p>
-                  <p>• Sales Agent handles loan offers</p>
-                  <p>• Verification Agent checks KYC</p>
-                  <p>• Underwriting Agent makes decisions</p>
-                  <p>• Sanction Agent generates documents</p>
-                </CardContent>
-              </SpotlightCard>
-            </TabsContent>
-
-            {/* FAQ */}
-            <TabsContent value="faq" className="space-y-4 mt-6">
-              <SpotlightCard spotlightColor="rgba(var(--primary), 0.1)">
-                <CardHeader>
-                  <h2 className="text-lg font-semibold">Frequently Asked Questions</h2>
-                  <CardDescription>Common questions about Project Orion</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>How long does loan approval take?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        Average decision time is 2 minutes. The AI agents process your application in parallel for speed.
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>What documents do I need?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        Salary documents (payslip or bank statement) for verification. Other documents depend on loan purpose.
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-3">
-                      <AccordionTrigger>Is my data secure?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        Yes. We use 256-bit encryption, secure authentication, and comply with data protection regulations.
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-4">
-                      <AccordionTrigger>Can I edit my application after submission?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        You can modify details up to the final verification step. Contact support for further assistance.
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-5">
-                      <AccordionTrigger>What if my loan is rejected?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        You'll receive detailed feedback on rejection reasons. You can reapply after addressing the issues.
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-6">
-                      <AccordionTrigger>How do I contact support?</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        You can reach our support team via the 'Contact' page or email us at support@projectorion.com.
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </SpotlightCard>
-            </TabsContent>
-          </Tabs>
         </div>
       </main>
 

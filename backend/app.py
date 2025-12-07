@@ -103,6 +103,15 @@ async def get_offers():
     return offers
 
 
+@app.get("/api/loans/products")
+async def get_loan_products():
+    """Get all available loan products from partner banks"""
+    from backend.data.mock_loans import MOCK_LOANS
+    await asyncio.sleep(0.1)
+    return MOCK_LOANS
+
+
+
 @app.post("/api/verify-kyc", response_model=KycVerificationResponse)
 async def verify_kyc(request: KycVerificationRequest):
     """Verify KYC details"""
@@ -239,7 +248,8 @@ async def agent_chat(request: ChatRequest):
     result = await ai_orchestrator.process_message(
         request.customerId,
         request.message,
-        user_profile
+        request.userProfile,
+        request.context
     )
     
     return ChatResponse(

@@ -58,6 +58,38 @@ class UnderwritingEngine:
         emi = UnderwritingEngine.calculate_emi(loan_amount, rate, tenure)
         total_amount = emi * tenure
 
+        # --------------------------------------------------------------------
+        # Advanced Algorithm: Weighted Scoring Model
+        # --------------------------------------------------------------------
+        from backend.services.advanced_algorithms import AdvancedAlgorithms
+        
+        # Normalize factors (0-1 scale)
+        norm_credit = min(credit_score / 900, 1.0)
+        norm_salary = min(monthly_net_salary / 200000, 1.0)  # Cap at 2L for normalization
+        norm_lTV = min(pre_approved_limit / loan_amount, 1.0) if loan_amount > 0 else 1.0
+        
+        factors = {
+            "credit_score": norm_credit,
+            "income": norm_salary,
+            "loan_to_value": norm_lTV
+        }
+        
+        weights = {
+            "credit_score": 0.5,  # 50% weight
+            "income": 0.3,        # 30% weight
+            "loan_to_value": 0.2  # 20% weight
+        }
+        
+        application_score = AdvancedAlgorithms.calculate_weighted_score(factors, weights)
+        
+        # Log the calculated score
+        await UnderwritingEngine._log_decision(
+            customer_id, 
+            "SCORING", 
+            f"Calculated Weighted Score: {application_score:.2f} (Credit: {norm_credit:.2f}, Income: {norm_salary:.2f})"
+        )
+        # --------------------------------------------------------------------
+
         # Rule 1: creditScore < 700 → REJECT
         if credit_score < 700:
             await UnderwritingEngine._log_decision(

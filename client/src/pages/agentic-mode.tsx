@@ -51,6 +51,7 @@ import { ParticlesBackground } from "@/components/ui/particles-background";
 import { SuccessConfetti } from "@/components/ui/confetti";
 import { isFeatureEnabled } from "@/config/features.config";
 import { getAgentWorkflowOrder } from "@/config/agents.config";
+import { LOAN_PRODUCTS } from "@/config/loan.config";
 
 type WorkflowMode = "auto" | "step";
 type WorkflowState = "idle" | "running" | "paused" | "completed" | "error";
@@ -105,6 +106,10 @@ export default function AgenticModePage() {
     queryKey: ["/api/customers"],
   });
 
+  const { data: loanProducts } = useQuery<any[]>({
+    queryKey: ["/api/loans/products"],
+  });
+
   // Load user on mount and create welcome message
   useEffect(() => {
     const loadUser = async () => {
@@ -113,12 +118,29 @@ export default function AgenticModePage() {
         const user = await getCurrentUser();
         setUserProfile(user);
         
+        // Check for passed loan context
+        const state = window.history.state?.usr?.state;
+        const selectedLoan = state?.selectedLoan;
+
         // Create personalized welcome message
-        const welcomeMsg = createWelcomeMessage(user);
+        let welcomeMsg = createWelcomeMessage(user);
+        
+        if (selectedLoan) {
+          welcomeMsg = {
+            id: "welcome-context",
+            agentType: "master",
+            role: "agent",
+            content: `Welcome back${user ? ', ' + user.firstName : ''}! I see you're interested in the **${selectedLoan.name}** from **${selectedLoan.bank}**.\n\nHere are the details:\n💰 Max Amount: ₹${selectedLoan.amount.toLocaleString('en-IN')}\n📝 Type: ${selectedLoan.type}\n\nWould you like to proceed with an application for this loan?`,
+            timestamp: new Date().toISOString(),
+          };
+          // Auto-inject context into backend
+          // We'll do this by simulating a user message or setting initial state
+        }
+        
         setMessages([welcomeMsg]);
         
-        // If user is logged in, skip data entry form - AI will ask for details
-        if (user) {
+        // If user is logged in OR has selected a loan, skip data entry form
+        if (user || selectedLoan) {
           setShowDataEntry(false);
         }
       } catch (error) {
@@ -194,22 +216,54 @@ export default function AgenticModePage() {
   }, [updateAgentStatus, addLog]);
 
   const processCustomerLookup = useCallback(async (customerId: string) => {
-    const customer = customers?.find(c => 
-      c.customerId.toLowerCase() === customerId.toLowerCase()
-    );
-
-    if (!customer) {
-      addMessage("master", "agent", `I couldn't find a customer with ID "${customerId}". Please check the ID and try again, or tell me you'd like to see the list of available customers.`);
-      addLog("master", "Customer Lookup", "Customer not found", "warning");
-      return null;
+    // If we have a logged-in user, use their profile
+    if (userProfile) {
+      const customer: Customer = {
+        customerId: `USER_${userProfile.id}`,
+        name: `${userProfile.firstName} ${userProfile.lastName}`,
+        age: 30, // Default or fetch if available
+        city: "Unknown", // Would come from profile
+        phone: userProfile.email, // Using email as contact for now
+        email: userProfile.email,
+        existingLoan: "no",
+        existingLoanAmount: 0,
+        creditScore: 750, // Mock score for logged in users
+        preApprovedLimit: (userProfile.monthlySalary || 50000) * 10,
+        employmentType: "Salaried",
+        monthlyNetSalary: userProfile.monthlySalary || 50000
+      };
+      
+      setCurrentCustomer(customer);
+      addMessage("master", "agent", `I have your details from your profile, ${userProfile.firstName}. Credit Score: ${customer.creditScore}, Pre-approved limit: ₹${customer.preApprovedLimit.toLocaleString('en-IN')}.\n\nNow, let me connect you with our Sales Agent to discuss your loan requirements.`);
+      addLog("master", "Profile Loaded", `${customer.name}`, "success");
+      return customer;
     }
 
-    setCurrentCustomer(customer);
-    addMessage("master", "agent", `Found customer: ${customer.name} from ${customer.city}. Credit Score: ${customer.creditScore}, Pre-approved limit: ₹${customer.preApprovedLimit.toLocaleString('en-IN')}.\n\nNow, let me connect you with our Sales Agent to discuss your loan requirements.`);
-    addLog("master", "Customer Found", `${customer.name} (${customer.customerId})`, "success");
-    
-    return customer;
-  }, [customers, addMessage, addLog]);
+    // If custom data was entered manually
+    if (customCustomerData) {
+       const customer: Customer = {
+        customerId: customCustomerData.customerId || `GUEST_${Date.now()}`,
+        name: customCustomerData.name,
+        age: customCustomerData.age || 30,
+        city: customCustomerData.city || "Unknown",
+        phone: customCustomerData.phone,
+        email: customCustomerData.email,
+        existingLoan: "no",
+        existingLoanAmount: 0,
+        creditScore: 700, // Default for guest
+        preApprovedLimit: (customCustomerData.monthlyNetSalary || customCustomerData.monthlyIncome || 50000) * 10,
+        employmentType: (customCustomerData.employmentType as "Salaried" | "Self-Employed") || "Salaried",
+        monthlyNetSalary: customCustomerData.monthlyNetSalary || customCustomerData.monthlyIncome || 50000
+      };
+      setCurrentCustomer(customer);
+      return customer;
+    }
+
+    // Fallback: Ask user to provide details or login
+    addMessage("master", "agent", `I don't have your details yet. Please provide your Name, Monthly Income, and City, or log in for a personalized experience.`);
+    addLog("master", "Customer Lookup", "No profile found", "warning");
+    return null;
+  }, [userProfile, customCustomerData, addMessage, addLog]);
 
   const runSalesAgent = useCallback(async (customer: Customer) => {
     await simulateAgentWork("sales", "Collecting loan requirements", 2000);
@@ -449,6 +503,10 @@ export default function AgenticModePage() {
             preApprovedLimit: (currentUserProfile.monthlySalary || 0) * 10,
             creditScore: 750, // Mocked for demo
           } : undefined,
+          // Pass selected loan context if this is the first message or relevant
+          context: window.history.state?.usr?.state?.selectedLoan ? {
+            selectedLoan: window.history.state.usr.state.selectedLoan
+          } : undefined
         }),
       });
 
@@ -587,14 +645,22 @@ export default function AgenticModePage() {
   }
 
   const getSuggestedActions = () => {
-    if (messages.length === 0) return ["Personal Loan", "Home Loan", "Business Loan"];
+    if (messages.length === 0) {
+      // Dynamic loan types from config
+      return Object.values(LOAN_PRODUCTS)
+        .filter(p => p.isActive)
+        .slice(0, 4) // Show top 4
+        .map(p => p.name);
+    }
     const lastMsg = messages[messages.length - 1];
     if (lastMsg.role === "agent" || lastMsg.role === "system") {
         const text = lastMsg.content.toLowerCase();
         
         // Loan Types - Check multiple patterns
         if (text.includes("type of loan") || text.includes("looking for today") || text.includes("what type")) {
-          return ["Personal Loan", "Home Loan", "Business Loan"];
+          return Object.values(LOAN_PRODUCTS)
+            .filter(p => p.isActive)
+            .map(p => p.name);
         }
         
         // After loan type selected - ask for amount
@@ -643,15 +709,19 @@ export default function AgenticModePage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Floating Particles Background */}
-      <ParticlesBackground 
-        className="opacity-40" 
-        particleCount={35}
-        speed={0.3}
-        connectDistance={100}
-      />
+      {isFeatureEnabled('particlesBackground') && (
+        <ParticlesBackground 
+          className="opacity-40" 
+          particleCount={35}
+          speed={0.3}
+          connectDistance={100}
+        />
+      )}
       
       {/* Success Confetti for Loan Approval */}
-      <SuccessConfetti show={underwritingResult?.decision === "APPROVE" && workflowState === "completed"} />
+      {isFeatureEnabled('confettiOnApproval') && (
+        <SuccessConfetti show={underwritingResult?.decision === "APPROVE" && workflowState === "completed"} />
+      )}
       
       <Header 
         mode="agentic" 
@@ -764,6 +834,7 @@ export default function AgenticModePage() {
                 placeholder={isProcessing ? "Processing..." : userProfile ? "Tell me about your loan requirements..." : "Type your message or Customer ID..."}
                 className="flex-1 border-0 rounded-none min-h-0"
                 suggestedActions={getSuggestedActions()}
+                loanProducts={loanProducts}
               />
             </ResizablePanel>
 

@@ -9,6 +9,7 @@ import { AnimatePresence } from "framer-motion";
 import { InitialLoader } from "@/components/initial-loader";
 import { PageTransition } from "@/components/page-transition";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { GlobalTapEffect } from "@/components/global-tap-effect";
 
 import LandingPage from "@/pages/landing";
 import StandardModePage from "@/pages/standard-mode";
@@ -24,10 +25,10 @@ import NotFound from "@/pages/not-found";
 
 import AdminDashboard from "@/pages/admin-dashboard";
 import ProfilePage from "@/pages/profile";
-import LoginPage from "@/pages/auth/login";
-import SignupPage from "@/pages/auth/signup";
+import AuthPage from "@/pages/auth/index";
 import AuthCallbackPage from "@/pages/auth/callback";
 import OnboardingPage from "@/pages/auth/onboarding";
+import LoanMarketplace from "@/pages/loans/index";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
@@ -36,9 +37,9 @@ function Router() {
       <ScrollToTop />
       <Switch>
         <Route path="/" component={LandingPage} />
+        <Route path="/loans" component={LoanMarketplace} />
         <Route path="/standard" component={StandardModePage} />
         <Route path="/agentic" component={AgenticModePage} />
-        <ProtectedRoute path="/admin" component={AdminDashboard} />
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <Route path="/features" component={FeaturesPage} />
         <Route path="/docs" component={DocsPage} />
@@ -47,8 +48,9 @@ function Router() {
         <Route path="/terms" component={TermsPage} />
         <Route path="/contact" component={ContactPage} />
         <Route path="/cookies" component={CookiesPage} />
-        <Route path="/auth/login" component={LoginPage} />
-        <Route path="/auth/signup" component={SignupPage} />
+        <Route path="/auth/login" component={AuthPage} />
+        <Route path="/auth/signup" component={AuthPage} />
+        <Route path="/auth" component={AuthPage} />
         <Route path="/auth/callback" component={AuthCallbackPage} />
         <Route path="/auth/onboarding" component={OnboardingPage} />
         <Route component={NotFound} />
@@ -81,6 +83,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="loan-assistant-theme">
       <GrainyBackground />
+      <GlobalTapEffect />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

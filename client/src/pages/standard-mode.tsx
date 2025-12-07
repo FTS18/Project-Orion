@@ -71,10 +71,11 @@ import {
 } from "@/components/ui/form";
 
 const WIZARD_STEPS = [
-  { id: 1, label: "Details", description: "Customer & Loan" },
-  { id: 2, label: "Documents", description: "Upload Files" },
-  { id: 3, label: "Verification", description: "KYC Check" },
-  { id: 4, label: "Review", description: "Final Decision" },
+  { id: 1, label: "Applicant", description: "Personal Details" },
+  { id: 2, label: "Loan Details", description: "Amount & Tenure" },
+  { id: 3, label: "Documents", description: "Income Proof" },
+  { id: 4, label: "Verification", description: "Identity Check" },
+  { id: 5, label: "Decision", description: "Final Approval" },
 ];
 
 const customerFormSchema = z.object({
@@ -267,21 +268,32 @@ export default function StandardModePage() {
 
   const handleNext = useCallback(async () => {
     if (currentStep === 1) {
-      if (!selectedCustomerId || !loanAmount || !loanPurpose) {
+      if (!selectedCustomerId) {
         toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields",
+          title: "Applicant Details Required",
+          description: "Please fill in your details to proceed.",
           variant: "destructive",
         });
         return;
       }
     }
 
-    if (currentStep === 3) {
+    if (currentStep === 2) {
+      if (!loanAmount || !loanPurpose) {
+        toast({
+          title: "Loan Details Required",
+          description: "Please specify the loan amount and purpose.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (currentStep === 4) {
       await verifyKycMutation.mutateAsync();
     }
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
   }, [currentStep, selectedCustomerId, loanAmount, loanPurpose, verifyKycMutation, toast]);
@@ -299,13 +311,13 @@ export default function StandardModePage() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return selectedCustomerId && loanAmount && parseInt(loanAmount) > 0 && (customCustomerData ? true : loanPurpose);
+        return !!selectedCustomerId;
       case 2:
-        return true;
+        return !!loanAmount && parseInt(loanAmount) > 0 && !!loanPurpose;
       case 3:
-        return kycResult?.status === "VERIFIED";
+        return true; // File upload is optional for demo flow, or strictly required? Let's make it optional for smoother demo
       case 4:
-        return true;
+        return kycResult?.status === "VERIFIED";
       case 5:
         return true;
       default:
@@ -321,8 +333,6 @@ export default function StandardModePage() {
     rate: offers?.[0]?.interestRate,
   } : null;
 
-
-
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -332,36 +342,37 @@ export default function StandardModePage() {
       />
 
       <main className="pt-24 pb-16">
-        <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <div className="mb-8 md:mb-12 relative z-10">
-            <div className="flex flex-col md:flex-row items-center justify-center relative">
+        <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <div className="mb-8 md:mb-12">
+            <div className="flex flex-col md:flex-row items-center justify-between relative gap-4">
               <Button
                 variant="ghost"
                 onClick={() => navigate("/")}
-                className="self-start md:absolute md:left-0 md:top-0 gap-2 hover:bg-primary/5 hover:text-primary transition-colors mb-4 md:mb-0 pl-0 md:pl-4"
+                className="self-start md:self-center gap-2 hover:bg-primary/5 hover:text-primary transition-colors pl-0"
                 data-testid="button-back-home"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Back to Home
               </Button>
               
-              <div className="text-center">
-                <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+              <div className="text-center md:absolute md:left-1/2 md:-translate-x-1/2 w-full md:w-auto">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                   Loan Application
                 </h1>
-                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Complete the guided steps below to get your instant loan decision.
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Complete the steps below for an instant decision.
                 </p>
               </div>
+
+              <div className="hidden md:block w-[100px]" /> {/* Spacer for balance */}
             </div>
           </div>
 
           <WizardStepper 
             steps={WIZARD_STEPS} 
             currentStep={currentStep} 
-            className="mb-8"
+            className="mb-8 max-w-4xl mx-auto"
             onStepClick={(stepId) => {
-              // Only allow navigating to previous steps or the current step
               if (stepId < currentStep) {
                 setCurrentStep(stepId);
               }
@@ -369,34 +380,36 @@ export default function StandardModePage() {
           />
 
           <SpotlightCard 
-            className="animate-fade-in border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md shadow-2xl rounded-3xl overflow-hidden" 
+            className="animate-fade-in border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md shadow-2xl rounded-3xl overflow-hidden mx-auto" 
             spotlightColor="rgba(var(--primary), 0.1)"
           >
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-6 md:p-10">
               {currentStep === 1 && (
-                <Step1CustomerDetails
-                  customers={customers || []}
-                  isLoading={isLoadingCustomers}
-                  selectedCustomerId={selectedCustomerId}
+                <Step1ApplicantInfo
+                  userProfile={userProfile}
+                  onCustomCustomerChange={setCustomCustomerData}
+                  customCustomerData={customCustomerData}
                   onSelectCustomer={setSelectedCustomerId}
+                  onNext={handleNext}
+                />
+              )}
+
+              {currentStep === 2 && (
+                <Step2LoanDetails
                   loanAmount={loanAmount}
                   onLoanAmountChange={setLoanAmount}
                   loanTenure={loanTenure}
                   onLoanTenureChange={setLoanTenure}
                   loanPurpose={loanPurpose}
                   onLoanPurposeChange={setLoanPurpose}
-                  creditData={creditData}
-                  isLoadingCredit={isLoadingCredit}
-                  userProfile={userProfile}
-                  onCustomCustomerChange={setCustomCustomerData}
-                  customCustomerData={customCustomerData}
                   offers={offers}
                   isLoadingOffers={isLoadingOffers}
+                  selectedCustomer={selectedCustomer}
                 />
               )}
 
-              {currentStep === 2 && (
-                <Step2Documents
+              {currentStep === 3 && (
+                <Step3Documents
                   selectedCustomer={selectedCustomer}
                   loanRequest={loanRequest}
                   onFileSelect={handleFileSelect}
@@ -410,8 +423,8 @@ export default function StandardModePage() {
                 />
               )}
 
-              {currentStep === 3 && (
-                <Step3Verification
+              {currentStep === 4 && (
+                <Step4Verification
                   selectedCustomer={selectedCustomer}
                   kycResult={kycResult}
                   isVerifying={verifyKycMutation.isPending}
@@ -419,8 +432,8 @@ export default function StandardModePage() {
                 />
               )}
 
-              {currentStep === 4 && (
-                <Step4Review
+              {currentStep === 5 && (
+                <Step5Decision
                   selectedCustomer={selectedCustomer}
                   loanRequest={loanRequest}
                   kycResult={kycResult}
@@ -432,18 +445,20 @@ export default function StandardModePage() {
                 />
               )}
 
-              <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5">
-                <WizardNavigation
-                  currentStep={currentStep}
-                  totalSteps={4}
-                  onPrevious={handlePrevious}
-                  onNext={handleNext}
-                  onSubmit={handleSubmit}
-                  isNextDisabled={!canProceed()}
-                  isSubmitting={underwriteMutation.isPending}
-                  submitLabel="Submit for Decision"
-                />
-              </div>
+              {currentStep > 1 && (
+                <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5">
+                  <WizardNavigation
+                    currentStep={currentStep}
+                    totalSteps={5}
+                    onPrevious={handlePrevious}
+                    onNext={handleNext}
+                    onSubmit={handleSubmit}
+                    isNextDisabled={!canProceed()}
+                    isSubmitting={underwriteMutation.isPending}
+                    submitLabel="Submit for Decision"
+                  />
+                </div>
+              )}
             </CardContent>
           </SpotlightCard>
         </div>
@@ -473,45 +488,20 @@ export default function StandardModePage() {
 }
 
 interface Step1Props {
-  customers: Customer[];
-  isLoading: boolean;
-  selectedCustomerId: string;
-  onSelectCustomer: (id: string) => void;
-  loanAmount: string;
-  onLoanAmountChange: (value: string) => void;
-  loanTenure: string;
-  onLoanTenureChange: (value: string) => void;
-  loanPurpose: string;
-  onLoanPurposeChange: (value: string) => void;
-  creditData?: { score: number; preApprovedLimit: number };
-  isLoadingCredit?: boolean;
   userProfile?: UserProfile | null;
-  onCustomCustomerChange?: (data: CustomerData | null) => void;
-  customCustomerData?: CustomerData | null;
-  offers?: Array<{ offerId: string; interestRate: number }>;
-  isLoadingOffers?: boolean;
+  onCustomCustomerChange: (data: CustomerData | null) => void;
+  customCustomerData: CustomerData | null;
+  onSelectCustomer: (id: string) => void;
+  onNext: () => void;
 }
 
-function Step1CustomerDetails({
-  customers,
-  isLoading,
-  selectedCustomerId,
-  onSelectCustomer,
-  loanAmount,
-  onLoanAmountChange,
-  loanTenure,
-  onLoanTenureChange,
-  loanPurpose,
-  onLoanPurposeChange,
-  creditData,
-  isLoadingCredit,
+function Step1ApplicantInfo({
   userProfile,
   onCustomCustomerChange,
   customCustomerData,
-  offers,
-  isLoadingOffers
+  onSelectCustomer,
+  onNext
 }: Step1Props) {
-  const [activeTab, setActiveTab] = useState("select");
   const form = useForm<z.infer<typeof customerFormSchema>>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
@@ -528,7 +518,7 @@ function Step1CustomerDetails({
 
   // Auto-fill from user profile
   useEffect(() => {
-    if (userProfile && activeTab === "custom") {
+    if (userProfile) {
       form.reset({
         name: `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim(),
         email: userProfile.email,
@@ -540,7 +530,7 @@ function Step1CustomerDetails({
         preApprovedLimit: (userProfile.monthlySalary || 50000) * 10,
       });
     }
-  }, [userProfile, activeTab, form]);
+  }, [userProfile, form]);
 
   const onSubmit = (data: z.infer<typeof customerFormSchema>) => {
     const newCustomer: CustomerData = {
@@ -550,334 +540,279 @@ function Step1CustomerDetails({
       employmentType: 'salaried',
     };
     
-    onCustomCustomerChange?.(newCustomer);
+    onCustomCustomerChange(newCustomer);
     onSelectCustomer(newCustomer.customerId);
-    onLoanAmountChange(newCustomer.preApprovedLimit.toString());
+    onNext();
   };
 
-  const selectedCustomer = customCustomerData 
-    ? { ...customCustomerData } as unknown as Customer 
-    : customers.find(c => c.customerId === selectedCustomerId);
-
-  // Use credit data from props or from selected customer
-  const displayCreditData = customCustomerData ? {
-    score: customCustomerData.creditScore,
-    preApprovedLimit: customCustomerData.preApprovedLimit
-  } : creditData;
-
   return (
-    <div className="space-y-8 animate-fade-in">
-      <Tabs value={activeTab} onValueChange={(val) => {
-        setActiveTab(val);
-        if (val === "select") {
-          onCustomCustomerChange?.(null);
-          onSelectCustomer("");
-        }
-      }} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="select">Select Existing Customer</TabsTrigger>
-          <TabsTrigger value="custom">Enter Custom Details</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="select" className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Select Customer</h2>
-            </div>
-            
-            {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {customers.map((customer) => (
-                  <SpotlightCard
-                    key={customer.customerId}
-                    className={cn(
-                      "p-5 cursor-pointer transition-all duration-300 border-black/5 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-md rounded-xl",
-                      selectedCustomerId === customer.customerId
-                        ? "ring-2 ring-primary shadow-lg shadow-primary/20 scale-[1.02] bg-primary/5"
-                        : "hover:scale-[1.02] hover:shadow-md hover:bg-white/80 dark:hover:bg-black/60"
-                    )}
-                    spotlightColor="rgba(var(--primary), 0.1)"
-                    onClick={() => onSelectCustomer(customer.customerId)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-base truncate">{customer.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono mt-1">{customer.customerId}</p>
-                        <p className="text-xs text-muted-foreground truncate">{customer.email}</p>
-                      </div>
-                      <div className={cn(
-                        "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0",
-                        selectedCustomerId === customer.customerId
-                          ? "border-primary bg-primary text-white"
-                          : "border-muted-foreground/30"
-                      )}>
-                        {selectedCustomerId === customer.customerId && <CheckCircle className="h-3.5 w-3.5" />}
-                      </div>
-                    </div>
-                  </SpotlightCard>
-                ))}
-              </div>
-            )}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <div className="p-2 rounded-full bg-primary/10 text-primary">
+            <UserCircle className="w-5 h-5" />
           </div>
-        </TabsContent>
+          Enter Applicant Details
+        </h3>
+        {userProfile && (
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 w-fit">
+            Auto-filled from Profile
+          </Badge>
+        )}
+      </div>
 
-        <TabsContent value="custom" className="space-y-6">
-          <SpotlightCard 
-            className="p-6 md:p-8 border-black/5 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-md rounded-2xl"
-            spotlightColor="rgba(var(--primary), 0.1)"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="john@example.com" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="9876543210" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Age</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="25" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Mumbai" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="monthlyNetSalary"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Monthly Salary (₹)</FormLabel>
+                    <FormControl>
+                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="creditScore"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Credit Score</FormLabel>
+                    <FormControl>
+                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="preApprovedLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Pre-approved Limit (₹)</FormLabel>
+                    <FormControl>
+                      <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          <Button 
+            type="submit"
+            className="w-full mt-8 h-12 text-base font-medium shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]" 
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <div className="p-2 rounded-full bg-primary/10 text-primary">
-                  <UserCircle className="w-5 h-5" />
-                </div>
-                Enter Applicant Details
-              </h3>
-              {userProfile && (
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 w-fit">
-                  Auto-filled from Profile
-                </Badge>
-              )}
-            </div>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-5">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="john@example.com" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Phone</FormLabel>
-                          <FormControl>
-                            <Input placeholder="9876543210" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="age"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Age</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="25" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Mumbai" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-5">
-                    <FormField
-                      control={form.control}
-                      name="monthlyNetSalary"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Monthly Salary (₹)</FormLabel>
-                          <FormControl>
-                            <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="creditScore"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Credit Score</FormLabel>
-                          <FormControl>
-                            <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="preApprovedLimit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Pre-approved Limit (₹)</FormLabel>
-                          <FormControl>
-                            <Input type="number" className="h-11 bg-white/50 dark:bg-black/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit"
-                  className="w-full mt-8 h-12 text-base font-medium shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]" 
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Use These Details
-                </Button>
-              </form>
-            </Form>
-          </SpotlightCard>
-        </TabsContent>
-      </Tabs>
-
-      {/* Loan Details Section - Only show when customer is selected */}
-      {(selectedCustomerId || customCustomerData) && (
-        <div className="space-y-6 animate-fade-in pt-6 border-t border-border/50">
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet className="h-5 w-5 text-primary" aria-hidden="true" />
-            <h2 className="text-xl font-semibold">Loan Requirements</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="loanAmount" className="text-sm font-medium">Loan Amount (₹)</Label>
-                <div className="relative group">
-                  <IndianRupee className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="loanAmount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={loanAmount}
-                    onChange={(e) => onLoanAmountChange(e.target.value)}
-                    min={10000}
-                    className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20"
-                  />
-                </div>
-                {isLoadingCredit ? (
-                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground animate-pulse">
-                    <div className="h-3 w-3 rounded-full bg-primary/20" />
-                    Checking credit limit...
-                  </div>
-                ) : displayCreditData && parseInt(loanAmount) > displayCreditData.preApprovedLimit ? (
-                  <p className="text-xs text-red-500 flex items-center gap-1 animate-in slide-in-from-top-1 mt-2">
-                    <AlertCircle className="h-3 w-3" />
-                    Exceeds limit of ₹{displayCreditData.preApprovedLimit.toLocaleString('en-IN')}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="loanTenure" className="text-sm font-medium">Tenure (Months)</Label>
-                <div className="relative group">
-                  <Calendar className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Select value={loanTenure} onValueChange={onLoanTenureChange}>
-                    <SelectTrigger className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[12, 24, 36, 48, 60, 72, 84].map((months) => (
-                        <SelectItem key={months} value={months.toString()}>
-                          {months} months
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="loanPurpose" className="text-sm font-medium">Purpose</Label>
-                <div className="relative group">
-                  <Target className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Select value={loanPurpose} onValueChange={onLoanPurposeChange}>
-                    <SelectTrigger className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20">
-                      <SelectValue placeholder="Select purpose..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOAN_PURPOSES.map((purpose) => (
-                        <SelectItem key={purpose} value={purpose}>
-                          {purpose}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* EMI Preview */}
-              {loanAmount && loanTenure && (
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10 flex flex-col items-center text-center shadow-sm relative overflow-hidden">
-                  {isLoadingOffers ? (
-                    <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
-                      <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : null}
-                  
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">Estimated Monthly EMI</p>
-                  <p className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                    ₹{Math.round((parseInt(loanAmount) * ((offers?.[0]?.interestRate || 8.5)/1200) * Math.pow(1 + (offers?.[0]?.interestRate || 8.5)/1200, parseInt(loanTenure))) / (Math.pow(1 + (offers?.[0]?.interestRate || 8.5)/1200, parseInt(loanTenure)) - 1)).toLocaleString('en-IN')}
-                  </p>
-                  <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-primary/20 text-primary">
-                    @ {offers?.[0]?.interestRate || 8.5}% p.a. Interest
-                  </Badge>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+            <Plus className="w-5 h-5 mr-2" />
+            {customCustomerData ? "Update Details" : "Save & Continue"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }
 
 interface Step2Props {
+  loanAmount: string;
+  onLoanAmountChange: (value: string) => void;
+  loanTenure: string;
+  onLoanTenureChange: (value: string) => void;
+  loanPurpose: string;
+  onLoanPurposeChange: (value: string) => void;
+  offers?: Array<{ offerId: string; interestRate: number }>;
+  isLoadingOffers?: boolean;
+  selectedCustomer?: Customer;
+}
+
+function Step2LoanDetails({
+  loanAmount,
+  onLoanAmountChange,
+  loanTenure,
+  onLoanTenureChange,
+  loanPurpose,
+  onLoanPurposeChange,
+  offers,
+  isLoadingOffers,
+  selectedCustomer
+}: Step2Props) {
+  // Safe access to preApprovedLimit
+  const preApprovedLimit = (selectedCustomer as any)?.preApprovedLimit || 0;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 rounded-full bg-primary/10 text-primary">
+          <Wallet className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-semibold">Loan Requirements</h2>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="loanAmount" className="text-sm font-medium">Loan Amount (₹)</Label>
+            <div className="relative group">
+              <IndianRupee className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                id="loanAmount"
+                type="number"
+                placeholder="Enter amount"
+                value={loanAmount}
+                onChange={(e) => onLoanAmountChange(e.target.value)}
+                min={10000}
+                className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20"
+              />
+            </div>
+            {preApprovedLimit > 0 && parseInt(loanAmount) > preApprovedLimit ? (
+              <p className="text-xs text-red-500 flex items-center gap-1 animate-in slide-in-from-top-1 mt-2">
+                <AlertCircle className="h-3 w-3" />
+                Exceeds limit of ₹{preApprovedLimit.toLocaleString('en-IN')}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="loanTenure" className="text-sm font-medium">Tenure (Months)</Label>
+            <div className="relative group">
+              <Calendar className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Select value={loanTenure} onValueChange={onLoanTenureChange}>
+                <SelectTrigger className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[12, 24, 36, 48, 60, 72, 84].map((months) => (
+                    <SelectItem key={months} value={months.toString()}>
+                      {months} months
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="loanPurpose" className="text-sm font-medium">Purpose</Label>
+            <div className="relative group">
+              <Target className="absolute left-3 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Select value={loanPurpose} onValueChange={onLoanPurposeChange}>
+                <SelectTrigger className="pl-10 h-12 text-lg bg-white/50 dark:bg-black/20">
+                  <SelectValue placeholder="Select purpose..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOAN_PURPOSES.map((purpose) => (
+                    <SelectItem key={purpose} value={purpose}>
+                      {purpose}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* EMI Preview */}
+          {loanAmount && loanTenure && (
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10 flex flex-col items-center text-center shadow-sm relative overflow-hidden">
+              {isLoadingOffers ? (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
+                  <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : null}
+              
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">Estimated Monthly EMI</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                ₹{Math.round((parseInt(loanAmount) * ((offers?.[0]?.interestRate || 8.5)/1200) * Math.pow(1 + (offers?.[0]?.interestRate || 8.5)/1200, parseInt(loanTenure))) / (Math.pow(1 + (offers?.[0]?.interestRate || 8.5)/1200, parseInt(loanTenure)) - 1)).toLocaleString('en-IN')}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Percent className="h-3 w-3" />
+                <span>{offers?.[0]?.interestRate || 8.5}% Interest Rate</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Step3Props {
   selectedCustomer?: Customer;
   loanRequest: LoanRequest | null;
   onFileSelect: (file: File) => void;
@@ -887,285 +822,163 @@ interface Step2Props {
   salaryData: SalaryExtractionResponse | null;
 }
 
-function Step2Documents({
+function Step3Documents({
   selectedCustomer,
   loanRequest,
   onFileSelect,
   uploadedFile,
   onFileRemove,
   isUploading,
-  salaryData,
-}: Step2Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  if (!selectedCustomer || !loanRequest) return null;
-
+  salaryData
+}: Step3Props) {
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Customer Summary Card */}
-      <SpotlightCard 
-        className="p-6 border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md"
-        spotlightColor="rgba(var(--primary), 0.1)"
-      >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
-              {selectedCustomer.name.charAt(0)}
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">{selectedCustomer.name}</h3>
-              <p className="text-sm text-muted-foreground">ID: {selectedCustomer.customerId}</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-8 text-sm">
-            <div>
-              <p className="text-muted-foreground">Loan Amount</p>
-              <p className="font-semibold">₹{loanRequest.amount.toLocaleString('en-IN')}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Tenure</p>
-              <p className="font-semibold">{loanRequest.tenure} months</p>
-            </div>
-          </div>
-        </div>
-      </SpotlightCard>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Upload Documents</h2>
-            </div>
-            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-              Pending
-            </Badge>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 flex gap-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Upload Salary Slip</p>
-                <p className="text-xs text-blue-700 dark:text-blue-400">
-                  Please upload your latest salary slip for income verification. This helps us process your application faster.
-                </p>
-              </div>
-            </div>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1 space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Upload Income Proof</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Please upload your latest salary slip or bank statement (PDF/Image) to verify your income.
+            </p>
+            
+            <FileUpload
+              onFileSelect={onFileSelect}
+              selectedFile={uploadedFile}
+              onRemove={onFileRemove}
+              isUploading={isUploading}
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onFileSelect(file);
-              }}
+              maxSize={5 * 1024 * 1024} // 5MB
             />
+          </div>
 
-            {!uploadedFile ? (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group"
-              >
-                <div className="w-16 h-16 rounded-full bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mx-auto mb-4 transition-colors">
-                  <Upload className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <h3 className="font-semibold text-lg mb-1">Upload Salary Slip</h3>
-                <p className="text-sm text-muted-foreground mb-4">PDF or image of your latest salary slip</p>
-                <p className="text-xs text-muted-foreground/70">Accepted formats: PDF, JPG, JPEG, PNG | Max size: 5MB</p>
-              </div>
-            ) : (
-              <SpotlightCard 
-                className="p-4 border-primary/20 bg-primary/5"
-                spotlightColor="rgba(var(--primary), 0.1)"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white/50 dark:bg-black/20 flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-primary" />
+          {salaryData && (
+            <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 animate-in slide-in-from-bottom-2">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-green-900 dark:text-green-100">Document Verified</h4>
+                  <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                    Successfully extracted income details.
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Net Income:</span>
+                      <span className="ml-2 font-medium">₹{salaryData.netIncome.toLocaleString('en-IN')}</span>
                     </div>
                     <div>
-                      <p className="font-medium truncate max-w-[200px]">{uploadedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <span className="text-muted-foreground">Confidence:</span>
+                      <span className="ml-2 font-medium">{(salaryData.confidenceScore * 100).toFixed(0)}%</span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onFileRemove}
-                    className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </Button>
                 </div>
-                
-                {isUploading && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-primary font-medium">Analyzing document...</span>
-                      <span className="text-muted-foreground">Please wait</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary animate-progress-indeterminate" />
-                    </div>
-                  </div>
-                )}
-              </SpotlightCard>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold">Document Preview</h3>
-          <div className="aspect-[3/4] rounded-xl border border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-center p-8">
-            {uploadedFile ? (
-              <>
-                <FileText className="h-16 w-16 text-primary/20 mb-4" />
-                <p className="font-medium text-lg">Preview Available</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  We've successfully received your document. Our AI is extracting the details.
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                  <FileText className="h-10 w-10 text-muted-foreground/40" />
-                </div>
-                <p className="text-muted-foreground">No document uploaded yet</p>
-                <p className="text-xs text-muted-foreground/70 mt-2 max-w-[200px]">
-                  Upload your salary slip to see the preview and extracted data here.
-                </p>
-              </>
-            )}
-          </div>
+        <div className="w-full md:w-80 lg:w-96 space-y-4">
+          <CustomerDataCard customer={selectedCustomer} className="h-full" />
+          {loanRequest && <LoanRequestCard loanRequest={loanRequest} className="h-full" />}
         </div>
       </div>
     </div>
   );
 }
 
-interface Step3Props {
+interface Step4Props {
   selectedCustomer?: Customer;
   kycResult: KycVerificationResponse | null;
   isVerifying: boolean;
   onVerify: () => void;
 }
 
-function Step3Verification({
+function Step4Verification({
   selectedCustomer,
   kycResult,
   isVerifying,
-  onVerify,
-}: Step3Props) {
+  onVerify
+}: Step4Props) {
   return (
     <div className="space-y-8 animate-fade-in">
-      <SpotlightCard 
-        className="p-8 border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md"
-        spotlightColor="rgba(var(--primary), 0.1)"
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Shield className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">KYC Verification</h2>
-            <p className="text-sm text-muted-foreground">Identity Verification</p>
-          </div>
-        </div>
+      <div className="text-center max-w-2xl mx-auto mb-8">
+        <h3 className="text-xl font-semibold mb-2">Identity Verification</h3>
+        <p className="text-muted-foreground">
+          We need to verify your identity against government records. This process is instant and secure.
+        </p>
+      </div>
 
-        {!kycResult ? (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 rounded-full bg-primary/5 mx-auto flex items-center justify-center mb-6">
-              <Shield className="h-10 w-10 text-primary/40" />
+      <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="space-y-6">
+          <div className="p-6 rounded-2xl bg-muted/50 border border-border/50 space-y-4">
+            <div className="flex justify-between items-center pb-4 border-b border-border/50">
+              <span className="text-sm text-muted-foreground">Applicant Name</span>
+              <span className="font-medium">{selectedCustomer?.name}</span>
             </div>
-            <h3 className="text-lg font-medium mb-2">Verify Your Identity</h3>
-            <p className="text-muted-foreground max-w-md mx-auto mb-8">
-              We need to verify your identity against our records. This is a mandatory step to ensure secure loan processing.
-            </p>
-            <Button
-              onClick={onVerify}
+            <div className="flex justify-between items-center pb-4 border-b border-border/50">
+              <span className="text-sm text-muted-foreground">Phone Number</span>
+              <span className="font-medium">{selectedCustomer?.phone}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">PAN Status</span>
+              <Badge variant="outline" className="bg-background">Pending Check</Badge>
+            </div>
+          </div>
+
+          {!kycResult && (
+            <Button 
+              onClick={onVerify} 
               disabled={isVerifying}
-              size="lg"
-              className="min-w-[200px] shadow-lg shadow-primary/20"
-              data-testid="button-verify-kyc"
+              className="w-full h-12 text-base shadow-lg shadow-primary/20"
             >
               {isVerifying ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Verifying...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Verifying Details...
                 </>
               ) : (
                 <>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Identity
+                  <Shield className="mr-2 h-5 w-5" />
+                  Verify Identity Now
                 </>
               )}
             </Button>
-          </div>
-        ) : (
-          <div className={cn(
-            "rounded-xl p-6 border transition-all duration-500",
-            kycResult.status === "VERIFIED" && "bg-green-500/5 border-green-500/20",
-            kycResult.status === "PENDING" && "bg-yellow-500/5 border-yellow-500/20",
-            kycResult.status === "FAILED" && "bg-red-500/5 border-red-500/20"
-          )}>
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center",
-                  kycResult.status === "VERIFIED" && "bg-green-500/10 text-green-600",
-                  kycResult.status === "PENDING" && "bg-yellow-500/10 text-yellow-600",
-                  kycResult.status === "FAILED" && "bg-red-500/10 text-red-600"
-                )}>
-                  {kycResult.status === "VERIFIED" ? <CheckCircle className="h-6 w-6" /> : <AlertCircle className="h-6 w-6" />}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {kycResult.status === "VERIFIED" ? "Verification Successful" : "Verification Failed"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {kycResult.status === "VERIFIED" 
-                      ? "Your identity has been successfully verified."
-                      : "We found issues with your provided details."}
-                  </p>
-                </div>
-              </div>
-              <StatusBadge status={kycResult.status} />
-            </div>
-
-            {kycResult.mismatches.length > 0 && (
-              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-4">
-                <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-500" />
-                  Reasons for Failure:
-                </p>
-                <ul className="space-y-2">
-                  {kycResult.mismatches.map((mismatch, i) => (
-                    <li key={i} className="text-sm flex items-center gap-2 text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                      {mismatch}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </SpotlightCard>
-
-      {selectedCustomer && (
-        <div className="opacity-80 hover:opacity-100 transition-opacity">
-          <CustomerDataCard customer={selectedCustomer} />
+          )}
         </div>
-      )}
+
+        <div className="relative min-h-[200px] flex items-center justify-center">
+          {kycResult ? (
+            <div className="text-center space-y-4 animate-in zoom-in-50 duration-500">
+              <div className={`mx-auto h-24 w-24 rounded-full flex items-center justify-center ${
+                kycResult.status === 'VERIFIED' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+              }`}>
+                {kycResult.status === 'VERIFIED' ? (
+                  <CheckCircle className="h-12 w-12" />
+                ) : (
+                  <XCircle className="h-12 w-12" />
+                )}
+              </div>
+              <div>
+                <h4 className="text-xl font-bold mb-1">
+                  {kycResult.status === 'VERIFIED' ? 'Verification Successful' : 'Verification Failed'}
+                </h4>
+                <p className="text-muted-foreground max-w-xs mx-auto">
+                  {kycResult.message}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground opacity-50">
+              <Shield className="h-24 w-24 mx-auto mb-4 stroke-1" />
+              <p>Waiting for verification...</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-interface Step4Props {
+interface Step5Props {
   selectedCustomer?: Customer;
   loanRequest: LoanRequest | null;
   kycResult: KycVerificationResponse | null;
@@ -1176,7 +989,7 @@ interface Step4Props {
   isGenerating: boolean;
 }
 
-function Step4Review({
+function Step5Decision({
   selectedCustomer,
   loanRequest,
   kycResult,
@@ -1184,157 +997,101 @@ function Step4Review({
   underwritingResult,
   isProcessing,
   onGenerateSanction,
-  isGenerating,
-}: Step4Props) {
-  return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <CheckCircle className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">Review & Submit</h2>
-            <p className="text-sm text-muted-foreground">Final Decision</p>
+  isGenerating
+}: Step5Props) {
+  if (isProcessing) {
+    return (
+      <div className="py-20 text-center space-y-6 animate-fade-in">
+        <div className="relative mx-auto h-24 w-24">
+          <div className="absolute inset-0 rounded-full border-4 border-muted opacity-20" />
+          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-primary animate-pulse" />
           </div>
         </div>
+        <div>
+          <h3 className="text-xl font-semibold mb-2">Analyzing Your Profile</h3>
+          <p className="text-muted-foreground">
+            Our AI is evaluating your creditworthiness and generating the best offer...
+          </p>
+        </div>
       </div>
+    );
+  }
 
-      <div className="grid gap-6">
-        {/* Application Summary */}
-        <SpotlightCard 
-          className="p-6 border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md"
-          spotlightColor="rgba(var(--primary), 0.1)"
-        >
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            Application Summary
+  if (underwritingResult) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="text-center mb-8">
+          <Badge 
+            variant={underwritingResult.decision === "APPROVE" ? "default" : "destructive"}
+            className="mb-4 px-4 py-1 text-base"
+          >
+            {underwritingResult.decision === "APPROVE" ? "APPROVED" : "REJECTED"}
+          </Badge>
+          <h3 className="text-2xl font-bold mb-2">
+            {underwritingResult.decision === "APPROVE" ? "Congratulations!" : "Application Status"}
           </h3>
-          
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            {underwritingResult.decision === "APPROVE" 
+              ? "Your loan application has been approved based on your profile and documents."
+              : underwritingResult.reason}
+          </p>
+        </div>
+
+        {underwritingResult.decision === "APPROVE" && (
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Applicant</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                    {selectedCustomer?.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium">{selectedCustomer?.name}</p>
-                    <p className="text-xs text-muted-foreground">{selectedCustomer?.email}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Loan Amount</p>
-                  <p className="font-semibold text-lg">₹{loanRequest?.amount.toLocaleString('en-IN')}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Tenure</p>
-                  <p className="font-semibold text-lg">{loanRequest?.tenure} Months</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Verifications</p>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-black/20 border border-black/5 dark:border-white/5">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">KYC Status</span>
-                    </div>
-                    {kycResult ? (
-                      <StatusBadge status={kycResult.status} />
-                    ) : (
-                      <Badge variant="outline">Not Verified</Badge>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-black/20 border border-black/5 dark:border-white/5">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Income Check</span>
-                    </div>
-                    {salaryData ? (
-                      <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                        <CheckCircle className="h-3 w-3" />
-                        <span className="text-sm font-medium">Verified</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Skipped</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SpotlightCard>
-
-        {/* Processing State */}
-        {isProcessing && (
-          <SpotlightCard className="p-8 text-center" spotlightColor="rgba(var(--primary), 0.1)">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Processing Application</h3>
-            <p className="text-muted-foreground">
-              Our AI agents are evaluating your profile and generating the best offer...
-            </p>
-          </SpotlightCard>
-        )}
-
-        {/* Underwriting Result */}
-        {underwritingResult && (
-          <div className="animate-fade-in space-y-6">
             <UnderwritingResultCard result={underwritingResult} />
             
-            {underwritingResult.decision === "APPROVE" && (
-              <SpotlightCard 
-                className="p-6 border-green-500/20 bg-green-500/5"
-                spotlightColor="rgba(34, 197, 94, 0.1)"
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Next Steps
+                </h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Download your Sanction Letter</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Sign the agreement digitally</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Amount disbursed within 2 hours</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Button 
+                onClick={onGenerateSanction} 
+                disabled={isGenerating}
+                className="w-full h-14 text-lg shadow-xl shadow-primary/20"
               >
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-600">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">Sanction Letter Ready</h3>
-                      <p className="text-sm text-green-600/80 dark:text-green-400/80">
-                        Your loan has been approved. You can now generate and download your sanction letter.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={onGenerateSanction}
-                    disabled={isGenerating}
-                    size="lg"
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20 min-w-[200px]"
-                    data-testid="button-generate-sanction"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Generating PDF...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="h-4 w-4 mr-2" />
-                        Download Letter
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </SpotlightCard>
-            )}
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Generating Letter...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="mr-2 h-5 w-5" />
+                    Download Sanction Letter
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="text-center py-12">
+      <p className="text-muted-foreground">Ready to submit your application?</p>
     </div>
   );
 }

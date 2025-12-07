@@ -24,10 +24,14 @@ export interface CustomerData {
   email: string;
   phone: string;
   monthlyNetSalary: number;
+  monthlyIncome?: number; // Alias for compatibility
   creditScore: number;
   preApprovedLimit: number;
   existingLoan: boolean;
+  existingLoanAmount?: number;
   employmentType: string;
+  age?: number;
+  city?: string;
 }
 
 export interface LoanDetails {
@@ -89,9 +93,9 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
   const [customCustomer, setCustomCustomer] = useState<Partial<CustomerData>>({});
   const [loanDetails, setLoanDetails] = useState<LoanDetails>({
-    loanAmount: 300000,
-    tenure: 60,
-    rate: 8.5,
+    loanAmount: LOAN_PRODUCTS.personal.defaultAmount,
+    tenure: LOAN_PRODUCTS.personal.defaultTenure,
+    rate: LOAN_PRODUCTS.personal.baseInterestRate,
   });
 
   // Pre-fill form with user profile data
@@ -152,71 +156,6 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
 
         {/* Customer Selection Tab */}
         <TabsContent value="select" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Pre-Approved Customers
-            </h3>
-            <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {DEFAULT_CUSTOMERS.map((customer) => (
-                <SpotlightCard
-                  key={customer.customerId}
-                  className={cn(
-                    "p-4 cursor-pointer transition-all duration-300 border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md",
-                    selectedCustomer?.customerId === customer.customerId
-                      ? "ring-2 ring-primary shadow-lg shadow-primary/20 scale-[1.02]"
-                      : "hover:scale-[1.02] hover:shadow-md"
-                  )}
-                  spotlightColor="rgba(var(--primary), 0.1)"
-                  onClick={() => handleSelectCustomer(customer)}
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="font-bold text-lg">{customer.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {customer.customerId}
-                        </p>
-                      </div>
-                      <div
-                        className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                          selectedCustomer?.customerId === customer.customerId
-                            ? "border-primary bg-primary"
-                            : "border-muted-foreground/30"
-                        )}
-                      >
-                        {selectedCustomer?.customerId === customer.customerId && (
-                          <div className="w-2 h-2 bg-white rounded-full" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 mt-auto">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Salary</span>
-                        <span className="font-medium">₹{customer.monthlyNetSalary.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Credit Score</span>
-                        <span className={cn(
-                          "font-medium",
-                          customer.creditScore >= 750 ? "text-green-500" : "text-yellow-500"
-                        )}>{customer.creditScore}</span>
-                      </div>
-                      <div className="pt-2 mt-2 border-t border-black/5 dark:border-white/5 flex justify-between text-sm">
-                        <span className="text-muted-foreground">Limit</span>
-                        <span className="font-bold text-primary">₹{customer.preApprovedLimit.toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
-                  </div>
-                </SpotlightCard>
-              ))}
-            </div>
-          </div>
-          </div>
-
           {/* Custom Customer Entry */}
           <SpotlightCard 
             className="p-6 border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md"
@@ -225,7 +164,7 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <UserCircle className="w-5 h-5 text-primary" />
-                Enter Your Own Details
+                Enter Your Details
               </h3>
               {userProfile && (
                 <div className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -457,16 +396,16 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   <div className="space-y-2">
                     <Label htmlFor="tenure">
                       Tenure (Months) *
-                      <span className="text-xs text-muted-foreground ml-2">(12 - 84 months)</span>
+                      <span className="text-xs text-muted-foreground ml-2">({LOAN_PRODUCTS.personal.minTenure} - {LOAN_PRODUCTS.personal.maxTenure} months)</span>
                     </Label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="tenure"
                         type="number"
-                        min="12"
-                        max="84"
-                        placeholder="60"
+                        min={LOAN_PRODUCTS.personal.minTenure}
+                        max={LOAN_PRODUCTS.personal.maxTenure}
+                        placeholder={LOAN_PRODUCTS.personal.defaultTenure.toString()}
                         value={loanDetails.tenure}
                         onChange={(e) =>
                           handleLoanDetailsChange('tenure', parseInt(e.target.value))
@@ -487,9 +426,9 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                         id="rate"
                         type="number"
                         step="0.1"
-                        min="5"
-                        max="15"
-                        placeholder="8.5"
+                        min={5}
+                        max={20}
+                        placeholder={LOAN_PRODUCTS.personal.baseInterestRate.toString()}
                         value={loanDetails.rate}
                         onChange={(e) =>
                           handleLoanDetailsChange('rate', parseFloat(e.target.value))
@@ -506,11 +445,11 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                   <div className="flex-1 rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent border border-primary/10 p-6 flex flex-col justify-center items-center text-center">
                     <p className="text-sm text-muted-foreground mb-1 uppercase tracking-wider font-medium">Estimated Monthly EMI</p>
                     <p className="text-4xl font-bold text-primary mb-4">
-                      ₹{calculateEMI(
+                      {formatCurrency(calcEMIFromConfig(
                         loanDetails.loanAmount,
                         loanDetails.rate,
                         loanDetails.tenure
-                      ).toLocaleString('en-IN')}
+                      ))}
                     </p>
                     
                     <div className="w-full h-px bg-primary/10 my-4" />
@@ -518,25 +457,25 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
                     <div className="flex justify-between w-full text-sm px-4">
                       <span className="text-muted-foreground">Total Amount</span>
                       <span className="font-semibold">
-                        ₹{(
-                          calculateEMI(
+                        {formatCurrency(
+                          calcEMIFromConfig(
                             loanDetails.loanAmount,
                             loanDetails.rate,
                             loanDetails.tenure
                           ) * loanDetails.tenure
-                        ).toLocaleString('en-IN')}
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between w-full text-sm px-4 mt-2">
                       <span className="text-muted-foreground">Total Interest</span>
                       <span className="font-semibold text-orange-600 dark:text-orange-400">
-                        ₹{(
-                          (calculateEMI(
+                        {formatCurrency(
+                          (calcEMIFromConfig(
                             loanDetails.loanAmount,
                             loanDetails.rate,
                             loanDetails.tenure
                           ) * loanDetails.tenure) - loanDetails.loanAmount
-                        ).toLocaleString('en-IN')}
+                        )}
                       </span>
                     </div>
                   </div>
@@ -568,17 +507,6 @@ export const CustomDataEntry: React.FC<CustomDataEntryProps> = ({
   );
 };
 
-function calculateEMI(principal: number, annualRate: number, tenureMonths: number): number {
-  const monthlyRate = annualRate / 12 / 100;
-  if (monthlyRate === 0) return Math.round(principal / tenureMonths);
 
-  const emi =
-    (principal *
-      monthlyRate *
-      Math.pow(1 + monthlyRate, tenureMonths)) /
-    (Math.pow(1 + monthlyRate, tenureMonths) - 1);
-
-  return Math.round(emi);
-}
 
 export default CustomDataEntry;

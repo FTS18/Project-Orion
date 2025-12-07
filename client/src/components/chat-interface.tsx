@@ -6,7 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Send, Loader2, User, Bot, Sparkles } from "lucide-react";
 import type { AgentMessage } from "@shared/schema";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // Simple markdown parser for chat messages
 function parseMarkdown(text: string): React.ReactNode {
@@ -78,6 +80,7 @@ interface ChatInterfaceProps {
   placeholder?: string;
   className?: string;
   suggestedActions?: string[];
+  loanProducts?: any[];
 }
 
 export function ChatInterface({
@@ -88,6 +91,7 @@ export function ChatInterface({
   placeholder = "Type your message...",
   className,
   suggestedActions,
+  loanProducts,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -108,6 +112,11 @@ export function ChatInterface({
       onSendMessage(input.trim());
       setInput("");
     }
+  };
+
+  const handleSelectLoan = (product: any) => {
+    // Send a message as if the user selected the loan
+    onSendMessage(`I want to apply for the ${product.productName} from ${product.bankName}`);
   };
 
   return (
@@ -159,6 +168,8 @@ export function ChatInterface({
               message={message} 
               isLast={index === messages.length - 1}
               isNew={index === messages.length - 1}
+              loanProducts={loanProducts}
+              onSelectLoan={handleSelectLoan}
             />
           ))}
         </AnimatePresence>
@@ -303,24 +314,143 @@ function AnimatedAvatar({ isUser = false, isActive = false }: AnimatedAvatarProp
   );
 }
 
+interface LoanCardCarouselProps {
+  products: any[];
+  filterType?: string;
+  onSelect: (product: any) => void;
+}
+
+const BANK_STYLES: Record<string, string> = {
+  "HDFC Bank": "from-blue-900/20 to-blue-800/5 border-blue-900/20 hover:border-blue-900/50",
+  "SBI": "from-cyan-600/20 to-cyan-500/5 border-cyan-600/20 hover:border-cyan-600/50",
+  "ICICI Bank": "from-orange-600/20 to-orange-500/5 border-orange-600/20 hover:border-orange-600/50",
+  "Axis Bank": "from-rose-700/20 to-rose-600/5 border-rose-700/20 hover:border-rose-700/50",
+  "Kotak Mahindra Bank": "from-red-600/20 to-red-500/5 border-red-600/20 hover:border-red-600/50",
+};
+
+function LoanCardCarousel({ products, filterType, onSelect }: LoanCardCarouselProps) {
+  const filteredProducts = useMemo(() => {
+    if (!filterType || filterType === "All") return products;
+    return products.filter(p => p.category.toLowerCase() === filterType.toLowerCase());
+  }, [products, filterType]);
+
+  const displayProducts = filteredProducts.slice(0, 3);
+
+  const renderCard = (product: any) => {
+    const bankStyle = BANK_STYLES[product.bankName] || "from-primary/5 to-transparent border-primary/10 hover:border-primary/30";
+    
+    return (
+      <Card className={cn(
+        "h-full bg-gradient-to-br backdrop-blur-sm transition-all cursor-pointer group relative overflow-hidden",
+        bankStyle
+      )}>
+        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="p-4 relative z-10 space-y-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-semibold text-sm line-clamp-1">{product.productName}</h4>
+              <p className="text-xs text-muted-foreground">{product.bankName}</p>
+            </div>
+            <Badge variant="secondary" className="text-[10px] bg-background/50 backdrop-blur-md border-white/10">
+              {product.interestRate}
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-background/30 p-2 rounded">
+              <p className="text-muted-foreground">Max Amount</p>
+              <p className="font-medium">
+                {typeof product.maxAmount === 'number' 
+                  ? `₹${(product.maxAmount / 100000).toFixed(1)}L`
+                  : product.maxAmount}
+              </p>
+            </div>
+            <div className="bg-background/30 p-2 rounded">
+              <p className="text-muted-foreground">Tenure</p>
+              <p className="font-medium">{product.tenureRange}</p>
+            </div>
+          </div>
+
+          <Button 
+            size="sm" 
+            className="w-full mt-2 bg-background/40 hover:bg-background/60 text-foreground transition-colors border border-white/10"
+            onClick={() => onSelect(product)}
+          >
+            Select Offer
+          </Button>
+        </div>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="w-full max-w-md mt-4 space-y-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+        {displayProducts.map((product) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="min-w-[280px] snap-center"
+          >
+            {renderCard(product)}
+          </motion.div>
+        ))}
+      </div>
+      
+      {filteredProducts.length > 3 && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground hover:text-primary">
+              View all {filteredProducts.length} offers <Sparkles className="w-3 h-3 ml-1" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Available Loan Offers</DialogTitle>
+            </DialogHeader>
+            <div className="grid md:grid-cols-2 gap-4 pt-4">
+              {filteredProducts.map((product) => (
+                <div key={product.id} onClick={() => onSelect(product)}>
+                  {renderCard(product)}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
 interface ChatMessageProps {
   message: AgentMessage;
   isLast?: boolean;
   isNew?: boolean;
+  loanProducts?: any[];
+  onSelectLoan?: (product: any) => void;
 }
 
-function ChatMessage({ message, isLast, isNew }: ChatMessageProps) {
+function ChatMessage({ message, isLast, isNew, loanProducts, onSelectLoan }: ChatMessageProps) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
   const [displayedText, setDisplayedText] = useState(isNew && !isUser ? "" : message.content);
   const [isTyping, setIsTyping] = useState(isNew && !isUser && !isSystem);
 
+  // Check for loan card tag
+  const loanCardMatch = message.content.match(/\[SHOW_LOAN_CARDS: (.*?)\]/);
+  const showLoanCards = !!loanCardMatch;
+  const loanFilterType = loanCardMatch ? loanCardMatch[1] : undefined;
+  
+  // Clean content by removing the tag
+  const cleanContent = message.content.replace(/\[SHOW_LOAN_CARDS: .*?\]/, "").trim();
+
   useEffect(() => {
     if (isNew && !isUser && !isSystem && isTyping) {
       let index = 0;
       const timer = setInterval(() => {
-        if (index <= message.content.length) {
-          setDisplayedText(message.content.slice(0, index));
+        if (index <= cleanContent.length) {
+          setDisplayedText(cleanContent.slice(0, index));
           index++;
         } else {
           setIsTyping(false);
@@ -329,9 +459,9 @@ function ChatMessage({ message, isLast, isNew }: ChatMessageProps) {
       }, 10);
       return () => clearInterval(timer);
     } else {
-      setDisplayedText(message.content);
+      setDisplayedText(cleanContent);
     }
-  }, [message.content, isNew, isUser, isSystem, isTyping]);
+  }, [cleanContent, isNew, isUser, isSystem, isTyping]);
 
   if (isSystem) {
     return (
@@ -363,7 +493,7 @@ function ChatMessage({ message, isLast, isNew }: ChatMessageProps) {
       <AnimatedAvatar isUser={isUser} isActive={isLast && !isUser} />
 
       <div className={cn(
-        "flex flex-col gap-1 max-w-md",
+        "flex flex-col gap-1 max-w-md w-full",
         isUser && "items-end"
       )}>
         <motion.div 
@@ -389,6 +519,15 @@ function ChatMessage({ message, isLast, isNew }: ChatMessageProps) {
             )}
           </div>
         </motion.div>
+        
+        {!isTyping && showLoanCards && loanProducts && onSelectLoan && (
+          <LoanCardCarousel 
+            products={loanProducts} 
+            filterType={loanFilterType} 
+            onSelect={onSelectLoan} 
+          />
+        )}
+
         <span className="text-[10px] text-muted-foreground px-1">
           {new Date(message.timestamp).toLocaleTimeString([], { 
             hour: '2-digit', 

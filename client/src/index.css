@@ -1,6 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.font-syne {
+  font-family: 'Syne', sans-serif;
+}
 
 /* LIGHT MODE */
 :root {
@@ -698,4 +704,146 @@
 
 .bg-gradient-conic {
   background: conic-gradient(var(--tw-gradient-stops));
+}
+
+/* Marquee Animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-33.33%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes marquee-slow {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-25%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 30s linear infinite;
+}
+
+.animate-marquee-slow {
+  animation: marquee-slow 35s linear infinite;
+}
+
+/* ========================================
+   VIEW TRANSITIONS API - THEME TOGGLE
+   ======================================== */
+
+/* Fallback animation for mobile browsers - Vertical stack animation */
+.theme-transitioning::before,
+.theme-transitioning::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  width: 26%;
+  height: 100%;
+  z-index: 999999;
+  pointer-events: none;
+  animation: stack-slide 0.7s ease-in-out forwards;
+}
+
+.theme-transitioning::before {
+  left: 0;
+  animation-delay: 0s;
+  background: var(--transition-bg-1, #00ff77);
+}
+
+.theme-transitioning::after {
+  left: 25%;
+  animation-delay: 0.05s;
+  background: var(--transition-bg-2, #180880);
+}
+
+@keyframes stack-slide {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  35% {
+    transform: translateY(0%);
+  }
+
+  65% {
+    transform: translateY(0%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Enable view transitions for theme changes on desktop */
+@supports (view-transition-name: root) {
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.5s;
+    animation-timing-function: ease-in-out;
+  }
+
+  /* Outward expansion - Light mode radiates out */
+  @keyframes theme-expand-out {
+    from {
+      clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
+    }
+
+    to {
+      clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
+    }
+  }
+
+  /* Inward contraction - Light shrinks away */
+  @keyframes theme-shrink-away {
+    from {
+      clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
+    }
+
+    to {
+      clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
+    }
+  }
+
+  /* Light theme expands outward - new light content grows */
+  .light::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  .light::view-transition-new(root) {
+    z-index: 999;
+    animation-name: theme-expand-out;
+  }
+
+  /* Dark theme - old light content shrinks away to reveal dark underneath */
+  .dark::view-transition-old(root) {
+    z-index: 999;
+    animation-name: theme-shrink-away;
+  }
+
+  .dark::view-transition-new(root) {
+    z-index: 1;
+  }
 }

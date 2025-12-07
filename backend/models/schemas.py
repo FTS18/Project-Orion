@@ -188,6 +188,7 @@ class ChatRequest(BaseModel):
     customerId: str
     message: str
     userProfile: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None
 
 
 class ChatResponse(BaseModel):

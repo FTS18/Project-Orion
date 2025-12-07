@@ -94,7 +94,8 @@ class AIOrchestrator:
         self, 
         customer_id: str, 
         message: str,
-        user_profile: Dict[str, Any] = None
+        user_profile: Dict[str, Any] = None,
+        context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Process user message using AI"""
         
@@ -103,6 +104,23 @@ class AIOrchestrator:
             self.conversations[customer_id] = ConversationManager(customer_id, user_profile)
         
         conv = self.conversations[customer_id]
+        
+        # Handle Context Injection (e.g., selected loan from marketplace)
+        if context and context.get("selectedLoan"):
+            loan = context["selectedLoan"]
+            conv.loan_requirements["loan_type"] = loan.get("type", "Personal")
+            conv.loan_requirements["loan_amount"] = loan.get("amount")
+            conv.loan_requirements["selected_product_id"] = loan.get("id")
+            conv.loan_requirements["selected_product_name"] = loan.get("name")
+            conv.loan_requirements["selected_bank"] = loan.get("bank")
+            
+            # Auto-advance stage if we have context
+            conv.current_stage = "requirements_gathered"
+            conv.agent_states["sales"].status = "active"
+            conv.agent_states["sales"].last_action = f"Processing application for {loan.get('name')}"
+            
+            conv.add_log("master", "context_injected", f"User selected {loan.get('name')}", "info")
+
         conv.add_message("user", message)
         
         # Update master agent status
@@ -161,11 +179,40 @@ class AIOrchestrator:
             )
             
             # Get chat history
-            chat_history = conv.get_chat_history(last_n=8)
+            # Advanced: Use k-NN / Fuzzy Search to find relevant past context
+            from backend.services.advanced_algorithms import AdvancedAlgorithms
             
+            # 1. Get all past user messages
+            past_user_messages = [m["content"] for m in conv.messages if m["role"] == "user"]
+            
+            # 2. Find most relevant past messages to the current query
+            relevant_context = []
+            if past_user_messages:
+                # Use fuzzy search (Cosine Similarity) to find semantically related past queries
+                matches = AdvancedAlgorithms.fuzzy_search(message, past_user_messages, threshold=0.4)
+                relevant_context = [m[0] for m in matches[:3]] # Top 3 relevant
+            
+            # 3. Always include immediate history (Short-term memory)
+            immediate_history = conv.get_chat_history(last_n=5)
+            
+            # 4. Construct context string
+            context_str = "\n".join([f"Relevant Past Context: {m}" for m in relevant_context])
+            
+            # 5. Add Loan Product Knowledge
+            from backend.data.mock_loans import MOCK_LOANS
+            products_str = json.dumps(MOCK_LOANS[:5]) # Pass top 5 products for context
+            context_str += f"\n\nAvailable Loan Products: {products_str}"
+            
+            # 6. Add Specific Selected Product Context
+            if conv.loan_requirements.get("selected_product_id"):
+                selected_id = conv.loan_requirements.get("selected_product_id")
+                selected_product = next((l for l in MOCK_LOANS if l["id"] == selected_id), None)
+                if selected_product:
+                    context_str += f"\n\nUSER SELECTED PRODUCT: {json.dumps(selected_product)}\nUser is specifically interested in this product. Focus on this."
+
             # Add system message at the start
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(chat_history)
+            messages = [{"role": "system", "content": system_prompt + f"\n\n{context_str}"}]
+            messages.extend(immediate_history)
             
             # Generate response from Gemini
             response = await gemini_service.chat(
@@ -198,6 +245,8 @@ I can help you with:
 • Home Loan
 • Business Loan
 
+[SHOW_LOAN_CARDS: All]
+
 What type of loan are you looking for today?"""
 
         # Loan type selection
@@ -214,43 +263,98 @@ What type of loan are you looking for today?"""
             conv.agent_states["sales"].status = "active"
             conv.agent_states["sales"].last_action = f"Processing {loan_type} loan inquiry"
             
+            conv.loan_requirements["loan_type"] = loan_type
+            conv.agent_states["sales"].status = "active"
+            conv.agent_states["sales"].last_action = f"Processing {loan_type} loan inquiry"
+            
+            # Find a relevant loan from mock data
+            from backend.data.mock_loans import MOCK_LOANS
+            
+            # Check if a specific product was already selected via context
+            selected_id = conv.loan_requirements.get("selected_product_id")
+            if selected_id:
+                relevant_loan = next((l for l in MOCK_LOANS if l["id"] == selected_id), None)
+            
+            # Fallback to category search if no specific ID or ID not found
+            if not selected_id or not relevant_loan:
+                relevant_loan = next((l for l in MOCK_LOANS if l["category"].lower() == loan_type.lower()), MOCK_LOANS[0])
+            
             return f"""Great choice, {user_name}! I'll help you with a {loan_type} Loan.
+            
+I recommend the **{relevant_loan['productName']}** from {relevant_loan['bankName']}.
 
-Based on your profile, here's a pre-approved offer:
-💰 **Amount**: Up to ₹5,00,000
-📅 **Tenure**: 12-60 months  
-📊 **Interest Rate**: 10.5% - 12.5% p.a.
+Here are the details:
+💰 **Amount**: Up to ₹{relevant_loan['maxAmount']:,}
+📅 **Tenure**: {relevant_loan['tenureRange']}
+📊 **Interest Rate**: {relevant_loan['interestRate']}
+✨ **Features**: {', '.join(relevant_loan['features'][:2])}
+
+[SHOW_LOAN_CARDS: {loan_type}]
 
 Would you like to proceed with this offer? Or tell me the specific amount you're looking for."""
 
         # Amount related
-        if any(word in message_lower for word in ["amount", "lakh", "lakhs", "₹", "rupee", "rs"]):
-            # Try to extract amount
-            import re
-            amount_match = re.search(r'(\d+)\s*(?:lakh|lakhs|lac)', message_lower)
-            if amount_match:
-                amount = int(amount_match.group(1)) * 100000
-                conv.loan_requirements["loan_amount"] = amount
-            
-            conv.agent_states["sales"].status = "completed"
-            conv.agent_states["verification"].status = "active"
-            
-            return f"""Perfect! I've noted your loan amount preference.
+        # Improved regex to capture: 500000, 5,00,000, 5 lakhs, 5L, 500k
+        amount_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)\s*(lakh|lakhs|lac|k|m|cr|crore)?', message_lower.replace('₹', '').replace('rs', '').strip())
+        
+        if amount_match and any(char.isdigit() for char in message_lower):
+            try:
+                raw_num = float(amount_match.group(1).replace(',', ''))
+                suffix = amount_match.group(2)
+                
+                if suffix:
+                    suffix = suffix.lower()
+                    if suffix in ['lakh', 'lakhs', 'lac', 'l']:
+                        amount = raw_num * 100000
+                    elif suffix == 'k':
+                        amount = raw_num * 1000
+                    elif suffix == 'm':
+                        amount = raw_num * 1000000
+                    elif suffix in ['cr', 'crore']:
+                        amount = raw_num * 10000000
+                    else:
+                        amount = raw_num
+                else:
+                    # Heuristic: If < 100, assume Lakhs (e.g. "5" -> 5 Lakhs) unless context implies otherwise
+                    # But for now, let's assume raw number if > 1000, else lakhs if < 100
+                    if raw_num < 100:
+                        amount = raw_num * 100000
+                    else:
+                        amount = raw_num
+                
+                conv.loan_requirements["loan_amount"] = int(amount)
+                
+                conv.agent_states["sales"].status = "completed"
+                conv.agent_states["verification"].status = "active"
+                
+                product_name = conv.loan_requirements.get("selected_product_name", f"{conv.loan_requirements.get('loan_type', 'Personal')} Loan")
+                
+                return f"""Perfect! I've updated your loan amount to **₹{int(amount):,}**.
 
-Let me verify your details:
+Let me verify your details for **{product_name}**:
 ✅ Name: {user_name}
 ✅ Loan Type: {conv.loan_requirements.get('loan_type', 'Personal')} Loan
-✅ Amount: ₹{conv.loan_requirements.get('loan_amount', 300000):,}
+✅ Amount: ₹{int(amount):,}
 
 I'll now initiate the verification process. Do you confirm these details?"""
+            except Exception as e:
+                conv.add_log("master", "amount_parse_error", str(e), "warning")
+
+        # Fallback if amount keyword detected but no amount found, or just confirming
+        if any(word in message_lower for word in ["amount", "value"]):
+             current_amount = conv.loan_requirements.get('loan_amount', 300000)
+             return f"Currently, I have noted an amount of ₹{current_amount:,}. If you'd like to change this, simply type the new amount (e.g., '5 Lakhs' or '500000')."
 
         # Yes/confirm patterns
         if any(word in message_lower for word in ["yes", "confirm", "proceed", "ok", "okay", "sure"]):
             conv.agent_states["verification"].status = "completed"
             conv.agent_states["underwriting"].status = "active"
             
-            return f"""Excellent! ✅ Your details have been verified.
-
+            # Use selected product name if available
+            product_name = conv.loan_requirements.get("selected_product_name", "your loan")
+            
+            return f"""Excellent! ✅ Your details have been verified for **{product_name}**.
+            
 Now running credit assessment...
 • Checking credit score
 • Analyzing financial history
